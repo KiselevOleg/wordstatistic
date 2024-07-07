@@ -1,0 +1,11 @@
+spring:
+    application:
+        name: localstatistic
+    datasource:
+        url: jdbc:postgresql://localstatistic-postgres:5432/localstatistic
+        username: localstatistic
+        password: password
+    jpa:
+        show-sql: true
+        properties.hibernate.dialect: org.hibernate.dialect.PostgreSQLDialect
+        generate-ddl: true

@@ -1,0 +1,3 @@
+rootProject.name = 'wordstatistic'
+
+include 'globalstatistic', 'localstatistic'

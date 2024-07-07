@@ -1,0 +1,90 @@
+#version: '3.9'
+
+networks:
+    overlay:
+
+volumes:
+    pg_data:
+
+services:
+    traefik:
+        image: traefik:v3.0
+        container_name: traefik
+        restart: unless-stopped
+        command:
+            #- --log.level=DEBUG
+            - --api.insecure=true
+            - --providers.docker=true
+            - --providers.docker.exposedbydefault=false
+            - --entryPoints.statistic.address=:80
+            - --entryPoints.pgadmin.address=:15432
+        ports:
+            - 80:80
+            - 8080:8080
+            - 15432:15432
+        networks:
+            - overlay
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock:ro
+
+    globalstatistic:
+        image: wordstatistic_globalstatistic:1.0.0
+        container_name: globalstatistic
+        restart: unless-stopped
+        networks:
+            - overlay
+        labels:
+            - traefik.enable=true
+            - traefik.http.routers.globalstatistic.rule=Host(`globalstatistic.localhost`)
+            - traefik.http.routers.globalstatistic.entrypoints=statistic
+    globalstatistic-postgres:
+        image: postgres:15
+        container_name: globalstatistic-postgres
+        restart: unless-stopped
+        environment:
+            - POSTGRES_DB=globalstatistic
+            - POSTGRES_USER=globalstatistic
+            - POSTGRES_PASSWORD=password
+        networks:
+            - overlay
+        volumes:
+            - ./postgres_data/globalstatistic_data:/var/lib/postgresql/data
+
+    localstatistic:
+        image: wordstatistic_localstatistic:1.0.0
+        container_name: localstatistic
+        restart: unless-stopped
+        networks:
+            - overlay
+        labels:
+            - traefik.enable=true
+            - traefik.http.routers.localstatistic.rule=Host(`localstatistic.localhost`)
+            - traefik.http.routers.localstatistic.entrypoints=statistic
+    localstatistic-postgres:
+        image: postgres:15
+        container_name: localstatistic-postgres
+        restart: unless-stopped
+        environment:
+            - POSTGRES_DB=localstatistic
+            - POSTGRES_USER=localstatistic
+            - POSTGRES_PASSWORD=password
+        networks:
+            - overlay
+        volumes:
+            - ./postgres_data/localstatistic_data:/var/lib/postgresql/data
+    pgadmin:
+        image: dpage/pgadmin4:latest
+        container_name: pgadmin
+        restart: unless-stopped
+        environment:
+            - PGADMIN_DEFAULT_EMAIL=haart@admin.com
+            - PGADMIN_DEFAULT_PASSWORD=test
+        networks:
+            - overlay
+        labels:
+            - traefik.enable=true
+            - traefik.http.routers.pgadmin.rule=Host(`pgadmin.localhost`)
+            - traefik.http.routers.pgadmin.entrypoints=pgadmin
+            - traefik.http.routers.pgadmin.middlewares=pgadmin-auth
+            #haart test
+            - 'traefik.http.middlewares.pgadmin-auth.basicauth.users=haart:$$2a$$12$$SUDmkLybXr3LQVCoHfmo4.bao6PIZe1R8vESkiCBAqbbNZ2jAdQkm'
