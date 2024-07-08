@@ -17,7 +17,7 @@ services:
             - --providers.docker=true
             - --providers.docker.exposedbydefault=false
             - --entryPoints.statistic.address=:80
-            - --entryPoints.pgadmin.address=:15432
+            - --entryPoints.admin.address=:15432
         ports:
             - 80:80
             - 8080:8080
@@ -72,6 +72,53 @@ services:
             - overlay
         volumes:
             - ./postgres_data/localstatistic_data:/var/lib/postgresql/data
+
+    zookeeper:
+        image: confluentinc/cp-zookeeper:latest
+        container_name: zookeeper
+        restart: unless-stopped
+        environment:
+            ZOOKEEPER_CLIENT_PORT: 2181
+            ZOOKEEPER_TICK_TIME: 2000
+        #ports:
+        #    - '2181:2181'
+        networks:
+            - overlay
+    kafka:
+        image: confluentinc/cp-kafka:latest
+        container_name: kafka
+        restart: unless-stopped
+        depends_on:
+            - zookeeper
+        #ports:
+        #     - '9092:9092'
+        environment:
+            KAFKA_BROKER_ID: 1
+            KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+            KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+            KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+            KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+            KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+        networks:
+            - overlay
+    kafka-ui:
+        image: provectuslabs/kafka-ui:latest
+        container_name: kafka-ui
+        restart: unless-stopped
+        #ports:
+        #    - "8080:8080"
+        environment:
+            DYNAMIC_CONFIG_ENABLED: true
+        networks:
+            - overlay
+        labels:
+            - traefik.enable=true
+            - traefik.http.routers.kafkaui.rule=Host(`kafkaui.localhost`)
+            - traefik.http.routers.kafkaui.entrypoints=admin
+            - traefik.http.routers.kafkaui.middlewares=admin-auth
+        depends_on:
+            - zookeeper
+
     pgadmin:
         image: dpage/pgadmin4:latest
         container_name: pgadmin
@@ -84,7 +131,7 @@ services:
         labels:
             - traefik.enable=true
             - traefik.http.routers.pgadmin.rule=Host(`pgadmin.localhost`)
-            - traefik.http.routers.pgadmin.entrypoints=pgadmin
-            - traefik.http.routers.pgadmin.middlewares=pgadmin-auth
+            - traefik.http.routers.pgadmin.entrypoints=admin
+            - traefik.http.routers.pgadmin.middlewares=admin-auth
             #haart test
-            - 'traefik.http.middlewares.pgadmin-auth.basicauth.users=haart:$$2a$$12$$SUDmkLybXr3LQVCoHfmo4.bao6PIZe1R8vESkiCBAqbbNZ2jAdQkm'
+            - 'traefik.http.middlewares.admin-auth.basicauth.users=haart:$$2a$$12$$SUDmkLybXr3LQVCoHfmo4.bao6PIZe1R8vESkiCBAqbbNZ2jAdQkm'

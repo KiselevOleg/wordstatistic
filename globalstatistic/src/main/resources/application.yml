@@ -5,6 +5,10 @@ spring:
         url: jdbc:postgresql://globalstatistic-postgres:5432/globalstatistic
         username: globalstatistic
         password: password
+    kafka:
+        consumer:
+            bootstrap-servers: kafka:9092
+            group-id: globalstatistic-group
     jpa:
         show-sql: true
         properties.hibernate.dialect: org.hibernate.dialect.PostgreSQLDialect
