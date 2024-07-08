@@ -5,6 +5,9 @@ spring:
         url: jdbc:postgresql://localstatistic-postgres:5432/localstatistic
         username: localstatistic
         password: password
+    kafka:
+        bootstrap-servers: kafka:9092
+        client-id: localstatistic-producer
     jpa:
         show-sql: true
         properties.hibernate.dialect: org.hibernate.dialect.PostgreSQLDialect
