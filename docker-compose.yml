@@ -27,6 +27,28 @@ services:
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock:ro
 
+    user:
+        image: wordstatistic_user:1.0.0
+        container_name: user
+        restart: unless-stopped
+        networks:
+            - overlay
+        labels:
+            - traefik.enable=true
+            - traefik.http.routers.globalstatistic.rule=Host(`user.localhost`)
+            - traefik.http.routers.globalstatistic.entrypoints=statistic
+    user-postgres:
+        image: postgres:15
+        container_name: user-postgres
+        restart: unless-stopped
+        environment:
+            - POSTGRES_DB=user
+            - POSTGRES_USER=user
+            - POSTGRES_PASSWORD=password
+        networks:
+            - overlay
+        volumes:
+            - ./postgres_data/user_data:/var/lib/postgresql/data
     globalstatistic:
         image: wordstatistic_globalstatistic:1.0.0
         container_name: globalstatistic

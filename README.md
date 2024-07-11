@@ -14,6 +14,10 @@ sudo docker build \
     --build-arg JAR_FILE="./build/libs/localstatistic-1.0.0.jar" \
     -t wordstatistic_localstatistic:1.0.0 ./localstatistic
 
+sudo docker build \
+    --build-arg JAR_FILE="./build/libs/user-1.0.0.jar" \
+    -t wordstatistic_user:1.0.0 ./user
+
 sudo docker compose up -d
 
 # use
