@@ -35,8 +35,8 @@ services:
             - overlay
         labels:
             - traefik.enable=true
-            - traefik.http.routers.globalstatistic.rule=Host(`user.localhost`)
-            - traefik.http.routers.globalstatistic.entrypoints=statistic
+            - traefik.http.routers.user.rule=Host(`user.localhost`)
+            - traefik.http.routers.user.entrypoints=statistic
     user-postgres:
         image: postgres:15
         container_name: user-postgres
