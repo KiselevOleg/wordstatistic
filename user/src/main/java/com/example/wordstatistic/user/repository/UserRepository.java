@@ -16,7 +16,7 @@ import java.util.UUID;
  * @author Kiselev Oleg
  */
 @Repository
-public interface UserRepository extends CrudRepository<User, Long> {
+public interface UserRepository extends CrudRepository<User, Integer> {
     Optional<User> findByName(@NotBlank String name);
     Optional<User> findByUuid(@NotNull UUID uuid);
     Boolean existsByName(@NotBlank String name);

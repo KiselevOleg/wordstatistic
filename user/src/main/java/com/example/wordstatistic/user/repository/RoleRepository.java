@@ -14,6 +14,6 @@ import java.util.Optional;
  * @author Kiselev Oleg
  */
 @Repository
-public interface RoleRepository extends CrudRepository<Role, Long> {
+public interface RoleRepository extends CrudRepository<Role, Integer> {
     Optional<Role> findByName(@NotBlank String name);
 }

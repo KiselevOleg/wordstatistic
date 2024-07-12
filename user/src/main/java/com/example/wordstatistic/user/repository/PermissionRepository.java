@@ -14,6 +14,6 @@ import java.util.Optional;
  * @author Kiselev Oleg
  */
 @Repository
-public interface PermissionRepository extends CrudRepository<Permission, Long> {
+public interface PermissionRepository extends CrudRepository<Permission, Integer> {
     Optional<Permission> findByName(@NotBlank String name);
 }
