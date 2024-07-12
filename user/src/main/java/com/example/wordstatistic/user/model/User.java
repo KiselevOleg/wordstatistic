@@ -6,6 +6,8 @@ package com.example.wordstatistic.user.model;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.UUID;
+
 /**
  * @author Kiselev Oleg
  */
@@ -21,6 +23,8 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id") private Long id;
+
+    @Column(name = "uuid", nullable = false, unique = true) private UUID uuid;
 
     @Column(name = "name", length = 50, nullable = false, unique = true) private String name;
 

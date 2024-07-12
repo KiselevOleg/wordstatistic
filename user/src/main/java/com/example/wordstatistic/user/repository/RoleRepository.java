@@ -4,6 +4,7 @@
 package com.example.wordstatistic.user.repository;
 
 import com.example.wordstatistic.user.model.Role;
+import jakarta.validation.constraints.NotBlank;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
@@ -14,5 +15,5 @@ import java.util.Optional;
  */
 @Repository
 public interface RoleRepository extends CrudRepository<Role, Long> {
-    Optional<Role> findByName(String name);
+    Optional<Role> findByName(@NotBlank String name);
 }
