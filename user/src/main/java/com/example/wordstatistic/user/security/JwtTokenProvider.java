@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
 import java.security.Key;
 import java.util.Date;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -29,7 +30,7 @@ import java.util.stream.Collectors;
 public class JwtTokenProvider {
     private static final String JWT_SECRET = "daf66e01593f61a15b857cf433aae03a005812b31234e149036bcc8dee755dbb";
     private static final String JWT_REFRESH_SECRET = "xdsgfwet934y934rf98whefr98we3ur9843yt98hf03jrnoaf0n3va04rnvao34r";
-    private static final Long JWT_EXPIRATION_ACCESS_DATE = 60000L;
+    private static final Long JWT_EXPIRATION_ACCESS_DATE = 6000000L;
     private static final Long JWT_EXPIRATION_REFRESH_DATE = 3600000L;
 
     private static final String CLAIM_USERNAME = "username";
@@ -140,12 +141,13 @@ public class JwtTokenProvider {
      * @return a username
      */
     public Set getPermissions(final String token) {
-        return Jwts.parser()
+        return (Set) Jwts.parser()
             .verifyWith((SecretKey) key())
             .build()
             .parseSignedClaims(token)
             .getPayload()
-            .get(CLAIM_PERMISSIONS, Set.class);
+            .get(CLAIM_PERMISSIONS, List.class)
+            .stream().collect(Collectors.toSet());
     }
 
     /**

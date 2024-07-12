@@ -129,10 +129,24 @@ public class UserService {
         Permission viewText = new Permission(null, "viewText");
         permissionRepository.save(viewText);
         viewText = permissionRepository.findByName("viewText").orElseThrow();
+
         Permission editText = new Permission(null, "editText");
         permissionRepository.save(editText);
         editText = permissionRepository.findByName("editText").orElseThrow();
+
+        Permission addTextToGlobal = new Permission(null, "addTextToGlobal");
+        permissionRepository.save(addTextToGlobal);
+        addTextToGlobal = permissionRepository.findByName("addTextToGlobal").orElseThrow();
+
         roleRepository.save(new Role(null, "user", Set.of(viewText, editText)));
-        roleRepository.save(new Role(null, "admin", Set.of(viewText, editText)));
+        roleRepository.save(new Role(null, "admin", Set.of(viewText, editText, addTextToGlobal)));
+
+        userRepository.save(new User(
+            null,
+            UUID.randomUUID(),
+            "Haart",
+            SecurityConfig.passwordEncoder().encode("test"),
+            roleRepository.findByName("admin").orElseThrow()
+        ));
     }
 }
