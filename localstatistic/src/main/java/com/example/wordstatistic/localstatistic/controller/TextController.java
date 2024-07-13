@@ -7,6 +7,7 @@ import com.example.wordstatistic.localstatistic.dto.TextEntityDTO;
 import com.example.wordstatistic.localstatistic.dto.TopicDTO;
 import com.example.wordstatistic.localstatistic.model.Text;
 import com.example.wordstatistic.localstatistic.model.Topic;
+import com.example.wordstatistic.localstatistic.security.JwtTokenProvider;
 import com.example.wordstatistic.localstatistic.service.LocalTextService;
 import com.example.wordstatistic.localstatistic.util.RestApiException;
 import jakarta.validation.constraints.NotBlank;
@@ -16,8 +17,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.UUID;
-
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 /**
@@ -25,39 +24,55 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
  */
 @RestController
 @RequestMapping("topicsAndTexts")
+@SuppressWarnings("PMD.ReturnCount")
 public class TextController {
+    private static final String VIEW_TEXT_PERMISSION = "viewText";
+    private static final String EDIT_TEXT_PERMISSION = "editText";
+    private static final String INVALID_TOKEN_ERROR_MESSAGE = "invalid token";
+
     private final LocalTextService localTextService;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @Autowired
-    public TextController(final LocalTextService localTextService) {
+    public TextController(final LocalTextService localTextService, final JwtTokenProvider jwtTokenProvider) {
         this.localTextService = localTextService;
+        this.jwtTokenProvider = jwtTokenProvider;
     }
 
     /**
      * get all topics that belong to a selected user.
-     * @param userId a user's id
+     * @param token a user's jwt token
      * @return a list of the topic names
      */
     @GetMapping(value = "/getAllTopicsForUser", produces = APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> getAllTopicsForUser(final @RequestParam @NotNull UUID userId) {
+    public ResponseEntity<?> getAllTopicsForUser(final @RequestParam @NotBlank String token) {
+        if (!jwtTokenProvider.validateToken(token)
+            || !jwtTokenProvider.getPermissions(token).contains(VIEW_TEXT_PERMISSION)) {
+            return new ResponseEntity<>(INVALID_TOKEN_ERROR_MESSAGE, HttpStatus.FORBIDDEN);
+        }
         return ResponseEntity.status(HttpStatus.OK).body(
-            localTextService.getAllTopicForUser(userId).stream().map(Topic::toDTO).toList()
+            localTextService.getAllTopicForUser(jwtTokenProvider.getId(token)).stream().map(Topic::toDTO).toList()
         );
     }
 
     /**
      * get all texts that belong to a selected topic.
-     * @param userId a user's id
      * @param topicName a topic's name
+     * @param token a user's jwt token
      * @return a list of the texts names
      */
     @GetMapping(value = "/getAllTextsForTopic", produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getAllTextsForTopic(
-        final @RequestParam @NotNull UUID userId,
-        final @RequestParam @NotBlank String topicName) {
+        final @RequestParam @NotBlank String topicName,
+        final @RequestParam @NotBlank String token
+    ) {
+        if (!jwtTokenProvider.validateToken(token)
+            || !jwtTokenProvider.getPermissions(token).contains(VIEW_TEXT_PERMISSION)) {
+            return new ResponseEntity<>(INVALID_TOKEN_ERROR_MESSAGE, HttpStatus.FORBIDDEN);
+        }
         try {
             return ResponseEntity.status(HttpStatus.OK).body(
-                localTextService.getAllTextsForSelectedTopic(userId, topicName)
+                localTextService.getAllTextsForSelectedTopic(jwtTokenProvider.getId(token), topicName)
                     .stream().map(Text::toListDTO).toList()
             );
         } catch (RestApiException e) {
@@ -67,19 +82,24 @@ public class TextController {
 
     /**
      * get a content of a selected text.
-     * @param userId  a user's id
      * @param topicName a topic's name
      * @param textName a text's name
+     * @param token a user's jwt token
      * @return a string with the text
      */
     @GetMapping(value = "/getTextContent", produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getTextContent(
-        final @RequestParam @NotNull UUID userId,
         final @RequestParam @NotBlank String topicName,
-        final @RequestParam @NotBlank String textName) {
+        final @RequestParam @NotBlank String textName,
+        final @RequestParam @NotBlank String token
+    ) {
+        if (!jwtTokenProvider.validateToken(token)
+            || !jwtTokenProvider.getPermissions(token).contains(VIEW_TEXT_PERMISSION)) {
+            return new ResponseEntity<>(INVALID_TOKEN_ERROR_MESSAGE, HttpStatus.FORBIDDEN);
+        }
         try {
             return ResponseEntity.status(HttpStatus.OK).body(
-                localTextService.getTextForSelectedTextName(userId, topicName, textName)
+                localTextService.getTextForSelectedTextName(jwtTokenProvider.getId(token), topicName, textName)
                     .map(Text::toEntityDTO)
             );
         } catch (RestApiException e) {
@@ -89,18 +109,23 @@ public class TextController {
 
     /**
      * add a new topic for a selected user.
-     * @param userId a user's id
-     * @param username a user's name
      * @param topicDTO a topic dto
+     * @param token a user's jwt token
      * @return error if topic already exists
      */
     @PostMapping(value = "/addNewTopic", produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<?> addNewTopic(
-        final @RequestParam @NotNull UUID userId,
-        final @RequestParam @NotBlank String username,
-        final @RequestBody @NotNull TopicDTO topicDTO) {
+        final @RequestBody @NotNull TopicDTO topicDTO,
+        final @RequestParam @NotBlank String token
+    ) {
+        if (!jwtTokenProvider.validateToken(token)
+            || !jwtTokenProvider.getPermissions(token).contains(EDIT_TEXT_PERMISSION)) {
+            return new ResponseEntity<>(INVALID_TOKEN_ERROR_MESSAGE, HttpStatus.FORBIDDEN);
+        }
         try {
-            localTextService.addTopic(userId, username, topicDTO.name());
+            localTextService.addTopic(
+                jwtTokenProvider.getId(token), jwtTokenProvider.getUsername(token), topicDTO.name()
+            );
             return ResponseEntity.status(HttpStatus.OK).body(null);
         } catch (RestApiException e) {
             return ResponseEntity.status(e.getStatus()).body(e.toDTO());
@@ -109,16 +134,26 @@ public class TextController {
 
     /**
      * add a new text for a selected topic.
-     * @param userId a user's id
      * @param textDTO a text  entity dto
+     * @param token a user's jwt token
      * @return error if topic does not exist or test already exists
      */
     @PostMapping(value = "addNewText", produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<?> addNewText(
-        final @RequestParam @NotNull UUID userId,
-        final @RequestBody @NotNull TextEntityDTO textDTO) {
+        final @RequestBody @NotNull TextEntityDTO textDTO,
+        final @RequestParam @NotBlank String token
+    ) {
+        if (!jwtTokenProvider.validateToken(token)
+            || !jwtTokenProvider.getPermissions(token).contains(EDIT_TEXT_PERMISSION)) {
+            return new ResponseEntity<>(INVALID_TOKEN_ERROR_MESSAGE, HttpStatus.FORBIDDEN);
+        }
         try {
-            localTextService.addText(userId, textDTO.topic(), textDTO.name(), textDTO.text());
+            localTextService.addText(
+                jwtTokenProvider.getId(token),
+                textDTO.topic(),
+                textDTO.name(),
+                textDTO.text()
+            );
             return ResponseEntity.status(HttpStatus.OK).body(null);
         } catch (RestApiException e) {
             return ResponseEntity.status(e.getStatus()).body(e.toDTO());
