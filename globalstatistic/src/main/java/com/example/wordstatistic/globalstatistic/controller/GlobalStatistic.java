@@ -4,6 +4,7 @@
 package com.example.wordstatistic.globalstatistic.controller;
 
 import com.example.wordstatistic.globalstatistic.model.Word;
+import com.example.wordstatistic.globalstatistic.security.JwtTokenProvider;
 import com.example.wordstatistic.globalstatistic.service.WordService;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -21,10 +22,15 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 @RequestMapping("globalStatistic")
 public class GlobalStatistic {
     private final WordService wordService;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @Autowired
-    GlobalStatistic(final WordService wordService) {
+    GlobalStatistic(
+        final WordService wordService,
+        final JwtTokenProvider jwtTokenProvider
+    ) {
         this.wordService = wordService;
+        this.jwtTokenProvider = jwtTokenProvider;
     }
 
     /**
@@ -50,11 +56,19 @@ public class GlobalStatistic {
     /**
      * add a new text (changes a most popular word statistic).
      * @param text the text
+     * @param token a user's jwt token
      * @return HttpStatus
      */
     @PostMapping(value = "/addText", produces = APPLICATION_JSON_VALUE)
-    public HttpStatus addText(final @RequestBody @NotBlank String text) {
+    public ResponseEntity<?> addText(
+        final @RequestBody @NotBlank String text,
+        final @RequestParam @NotBlank String token
+    ) {
+        if (!jwtTokenProvider.validateToken(token)
+            || !jwtTokenProvider.getPermissions(token).contains("addTextToGlobal")) {
+            return new ResponseEntity<>("invalid token", HttpStatus.FORBIDDEN);
+        }
         wordService.addNewText(text);
-        return HttpStatus.OK;
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 }

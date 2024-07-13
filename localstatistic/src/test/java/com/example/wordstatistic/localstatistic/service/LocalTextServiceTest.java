@@ -5,17 +5,24 @@ import com.example.wordstatistic.localstatistic.model.Topic;
 import com.example.wordstatistic.localstatistic.repository.TextRepository;
 import com.example.wordstatistic.localstatistic.repository.TopicRepository;
 import com.example.wordstatistic.localstatistic.util.RestApiException;
+import jakarta.validation.constraints.NotBlank;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.util.AssertionErrors.assertEquals;
 import static org.springframework.test.util.AssertionErrors.fail;
 
@@ -25,6 +32,9 @@ class LocalTextServiceTest {
     private final TextRepository textRepository;
     private final TopicRepository topicRepository;
     private final LocalTextService localTextService;
+
+    @MockBean
+    private KafkaTemplate<String, String> kafkaTemplate;
 
     private UUID user1, user2, user3;
 
@@ -345,6 +355,10 @@ class LocalTextServiceTest {
 
     @Test
     public void addTextTest1() {
+        ArgumentCaptor<String> kafkaTopicCap = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> kafkaMessageCap = ArgumentCaptor.forClass(String.class);
+        when(kafkaTemplate.send(kafkaTopicCap.capture(), kafkaMessageCap.capture())).thenReturn(null);
+
         try {
             localTextService.addText(user1, "topic1", "text113", "a new text");
         } catch (RestApiException e) {
@@ -358,6 +372,9 @@ class LocalTextServiceTest {
         assertEquals("incorrect getting a new text", topic, res.get().getTopic());
         assertEquals("incorrect getting a new text", "text113", res.get().getName());
         assertEquals("incorrect getting a new text", "a new text", res.get().getText());
+
+        assertEquals("kafka message incorrect", "text", kafkaTopicCap.getValue());
+        assertEquals("kafka message incorrect", "a new text", kafkaMessageCap.getValue());
     }
     @Test
     public void addTextTest2() {

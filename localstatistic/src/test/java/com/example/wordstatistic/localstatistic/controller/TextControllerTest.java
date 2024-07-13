@@ -4,6 +4,7 @@ import com.example.wordstatistic.localstatistic.dto.TextEntityDTO;
 import com.example.wordstatistic.localstatistic.dto.TopicDTO;
 import com.example.wordstatistic.localstatistic.model.Text;
 import com.example.wordstatistic.localstatistic.model.Topic;
+import com.example.wordstatistic.localstatistic.security.JwtTokenProvider;
 import com.example.wordstatistic.localstatistic.service.LocalTextService;
 import com.example.wordstatistic.localstatistic.util.RestApiException;
 import org.junit.jupiter.api.*;
@@ -18,6 +19,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import static com.example.wordstatistic.localstatistic.service.LocalTextService.*;
@@ -30,6 +32,8 @@ import static org.springframework.test.util.AssertionErrors.assertEquals;
 class TextControllerTest {
     @MockBean
     private LocalTextService localTextService;
+    @MockBean
+    private JwtTokenProvider jwtTokenProvider;
 
     @LocalServerPort
     private Integer port;
@@ -40,14 +44,36 @@ class TextControllerTest {
     @BeforeAll
     static void beforeAll() { }
 
+    private UUID user1;
     @BeforeEach
-    void setUp() { }
+    void setUp() {
+        user1 = UUID.randomUUID();
+
+        when(jwtTokenProvider.validateToken("viewTextToken")).thenReturn(true);
+        when(jwtTokenProvider.getPermissions("viewTextToken")).thenReturn(Set.of("singIn", "viewText"));
+        when(jwtTokenProvider.getId("viewTextToken")).thenReturn(user1);
+        when(jwtTokenProvider.getUsername("viewTextToken")).thenReturn("user1");
+
+        when(jwtTokenProvider.validateToken("editTextToken")).thenReturn(true);
+        when(jwtTokenProvider.getPermissions("editTextToken")).thenReturn(Set.of("singIn", "editText"));
+        when(jwtTokenProvider.getId("editTextToken")).thenReturn(user1);
+        when(jwtTokenProvider.getUsername("editTextToken")).thenReturn("user1");
+
+        when(jwtTokenProvider.validateToken("invalidToken")).thenReturn(false);
+        //when(jwtTokenProvider.getPermissions("invalidToken")).thenThrow(new Exception("invalidToken"));
+        //when(jwtTokenProvider.getId("invalidToken")).thenThrow(new Exception("invalidToken"));
+        //when(jwtTokenProvider.getUsername("editTextToken")).thenThrow(new Exception("invalidToken"));
+
+        when(jwtTokenProvider.validateToken("permissionErrorToken")).thenReturn(true);
+        when(jwtTokenProvider.getPermissions("permissionErrorToken")).thenReturn(Set.of("singIn"));
+        when(jwtTokenProvider.getId("permissionErrorToken")).thenReturn(user1);
+        when(jwtTokenProvider.getUsername("permissionErrorToken")).thenReturn("user1");
+    }
     @AfterEach
     void tearDown() { }
 
     @Test
     public void getAllTopicsForUserTest1() {
-        final UUID user1 = UUID.randomUUID();
         when(localTextService.getAllTopicForUser(any())).thenReturn(
             List.of(
                 new Topic(1, user1, "user1", "topic1"),
@@ -58,7 +84,7 @@ class TextControllerTest {
         );
 
         ResponseEntity<String> response = testRestTemplate
-            .getForEntity("http://localhost:"+this.port+"/topicsAndTexts/getAllTopicsForUser?userId="+user1.toString(),
+            .getForEntity("http://localhost:"+this.port+"/topicsAndTexts/getAllTopicsForUser?token=viewTextToken",
                 String.class);
         assertEquals("incorrect result", HttpStatus.OK, response.getStatusCode());
 
@@ -71,13 +97,12 @@ class TextControllerTest {
     }
     @Test
     public void getAllTopicsForUserTest2() {
-        final UUID user1 = UUID.randomUUID();
         when(localTextService.getAllTopicForUser(any())).thenReturn(
             List.of()
         );
 
         ResponseEntity<String> response = testRestTemplate
-            .getForEntity("http://localhost:"+this.port+"/topicsAndTexts/getAllTopicsForUser?userId="+user1.toString(),
+            .getForEntity("http://localhost:"+this.port+"/topicsAndTexts/getAllTopicsForUser?token=viewTextToken",
                 String.class);
         assertEquals("incorrect result", HttpStatus.OK, response.getStatusCode());
 
@@ -88,10 +113,25 @@ class TextControllerTest {
             res
         );
     }
+    @Test
+    public void getAllTopicsForUserTest3() {
+        ResponseEntity<String> response = testRestTemplate
+            .getForEntity("http://localhost:"+this.port+"/topicsAndTexts/getAllTopicsForUser?token=invalidToken",
+                String.class);
+        assertEquals("incorrect result", HttpStatus.FORBIDDEN, response.getStatusCode());
+        assertEquals("incorrect result", "invalid token", response.getBody());
+    }
+    @Test
+    public void getAllTopicsForUserTest4() {
+        ResponseEntity<String> response = testRestTemplate
+            .getForEntity("http://localhost:"+this.port+"/topicsAndTexts/getAllTopicsForUser?token=permissionErrorToken",
+                String.class);
+        assertEquals("incorrect result", HttpStatus.FORBIDDEN, response.getStatusCode());
+        assertEquals("incorrect result", "invalid token", response.getBody());
+    }
 
     @Test
     public void getAllTextsForTopicTest1() throws RestApiException {
-        UUID user1 = UUID.randomUUID();
         Topic topic = new Topic(1, user1, "user1", "topic1");
         when(localTextService.getAllTextsForSelectedTopic(any(),eq("topic1"))).thenReturn(
             List.of(
@@ -103,7 +143,7 @@ class TextControllerTest {
 
         ResponseEntity<String> response = testRestTemplate
             .getForEntity("http://localhost:"+this.port+"/topicsAndTexts/getAllTextsForTopic?" +
-                    "userId="+user1.toString()+"&topicName=topic1",
+                    "topicName=topic1&token=viewTextToken",
                 String.class);
         assertEquals("incorrect result", HttpStatus.OK, response.getStatusCode());
 
@@ -116,13 +156,12 @@ class TextControllerTest {
     }
     @Test
     public void getAllTextsForTopicTest2() throws RestApiException {
-        UUID user1 = UUID.randomUUID();
         when(localTextService.getAllTextsForSelectedTopic(any(),eq("topic1"))).thenReturn(
             List.of()
         );
 
         ResponseEntity<String> response = testRestTemplate
-            .getForEntity("http://localhost:"+this.port+"/topicsAndTexts/getAllTextsForTopic?userId="+user1.toString()+"&topicName=topic1",
+            .getForEntity("http://localhost:"+this.port+"/topicsAndTexts/getAllTextsForTopic?topicName=topic1&token=viewTextToken",
                 String.class);
         assertEquals("incorrect result", HttpStatus.OK, response.getStatusCode());
 
@@ -135,12 +174,11 @@ class TextControllerTest {
     }
     @Test
     public void getAllTextsForTopicTest3() throws RestApiException {
-        UUID user1 = UUID.randomUUID();
         when(localTextService.getAllTextsForSelectedTopic(any(),eq("topic1")))
             .thenThrow(LocalTextService.TOPIC_NOT_FOUND_ERROR);
 
         ResponseEntity<String> response = testRestTemplate
-            .getForEntity("http://localhost:"+this.port+"/topicsAndTexts/getAllTextsForTopic?userId="+user1.toString()+"&topicName=topic1",
+            .getForEntity("http://localhost:"+this.port+"/topicsAndTexts/getAllTextsForTopic?topicName=topic1&token=viewTextToken",
                 String.class);
         assertEquals("incorrect result", HttpStatus.NOT_FOUND, response.getStatusCode());
 
@@ -151,17 +189,34 @@ class TextControllerTest {
             res
         );
     }
+    @Test
+    public void getAllTextsForTopicTest4() throws RestApiException {
+        ResponseEntity<String> response = testRestTemplate
+            .getForEntity("http://localhost:"+this.port+"/topicsAndTexts/getAllTextsForTopic?" +
+                    "topicName=topic1&token=invalidToken",
+                String.class);
+        assertEquals("incorrect result", HttpStatus.FORBIDDEN, response.getStatusCode());
+        assertEquals("incorrect result", "invalid token", response.getBody());
+    }
+    @Test
+    public void getAllTextsForTopicTest5() throws RestApiException {
+        ResponseEntity<String> response = testRestTemplate
+            .getForEntity("http://localhost:"+this.port+"/topicsAndTexts/getAllTextsForTopic?" +
+                    "topicName=topic1&token=permissionErrorToken",
+                String.class);
+        assertEquals("incorrect result", HttpStatus.FORBIDDEN, response.getStatusCode());
+        assertEquals("incorrect result", "invalid token", response.getBody());
+    }
 
     @Test
     public void getTextContentTest1() throws RestApiException {
-        UUID user1 = UUID.randomUUID();
         Topic topic = new Topic(1, user1, "user1", "topic1");
         when(localTextService.getTextForSelectedTextName(user1, "topic1", "text1")).thenReturn(
             Optional.of(new Text(1, topic, "text1", "a test text"))
         );
 
         ResponseEntity<String> response = testRestTemplate
-            .getForEntity("http://localhost:"+this.port+"/topicsAndTexts/getTextContent?userId="+user1.toString()+"&topicName=topic1&textName=text1",
+            .getForEntity("http://localhost:"+this.port+"/topicsAndTexts/getTextContent?topicName=topic1&textName=text1&token=viewTextToken",
                 String.class);
         assertEquals("incorrect result", HttpStatus.OK, response.getStatusCode());
 
@@ -174,14 +229,13 @@ class TextControllerTest {
     }
     @Test
     public void getTextContentTest2() throws RestApiException {
-        UUID user1 = UUID.randomUUID();
         Topic topic = new Topic(1, user1, "user1", "topic1");
         when(localTextService.getTextForSelectedTextName(user1, "topic1", "text1")).thenReturn(
             Optional.empty()
         );
 
         ResponseEntity<String> response = testRestTemplate
-            .getForEntity("http://localhost:"+this.port+"/topicsAndTexts/getTextContent?userId="+user1.toString()+"&topicName=topic1&textName=text1",
+            .getForEntity("http://localhost:"+this.port+"/topicsAndTexts/getTextContent?topicName=topic1&textName=text1&token=viewTextToken",
                 String.class);
         assertEquals("incorrect result", HttpStatus.OK, response.getStatusCode());
 
@@ -194,12 +248,11 @@ class TextControllerTest {
     }
     @Test
     public void getTextContentTest3() throws RestApiException {
-        UUID user1 = UUID.randomUUID();
         when(localTextService.getTextForSelectedTextName(user1, "topic1", "text1"))
             .thenThrow(LocalTextService.TOPIC_OR_TEXT_NAME_NOT_FOUND_ERROR);
 
         ResponseEntity<String> response = testRestTemplate
-            .getForEntity("http://localhost:"+this.port+"/topicsAndTexts/getTextContent?userId="+user1.toString()+"&topicName=topic1&textName=text1",
+            .getForEntity("http://localhost:"+this.port+"/topicsAndTexts/getTextContent?topicName=topic1&textName=text1&token=viewTextToken",
                 String.class);
         assertEquals("incorrect result", HttpStatus.NOT_FOUND, response.getStatusCode());
 
@@ -210,11 +263,25 @@ class TextControllerTest {
             res
         );
     }
+    @Test
+    public void getTextContentTest4() throws RestApiException {
+        ResponseEntity<String> response = testRestTemplate
+            .getForEntity("http://localhost:"+this.port+"/topicsAndTexts/getTextContent?topicName=topic1&textName=text1&token=invalidToken",
+                String.class);
+        assertEquals("incorrect result", HttpStatus.FORBIDDEN, response.getStatusCode());
+        assertEquals("incorrect result", "invalid token", response.getBody());
+    }
+    @Test
+    public void getTextContentTest5() throws RestApiException {
+        ResponseEntity<String> response = testRestTemplate
+            .getForEntity("http://localhost:"+this.port+"/topicsAndTexts/getTextContent?topicName=topic1&textName=text1&token=permissionErrorToken",
+                String.class);
+        assertEquals("incorrect result", HttpStatus.FORBIDDEN, response.getStatusCode());
+        assertEquals("incorrect result", "invalid token", response.getBody());
+    }
 
     @Test
     public void addNewTopicTest1() throws RestApiException {
-        UUID user1 = UUID.randomUUID();
-
         ArgumentCaptor<UUID> userCap = ArgumentCaptor.forClass(UUID.class);
         ArgumentCaptor<String> userNameCap = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<String> topicNameCap = ArgumentCaptor.forClass(String.class);
@@ -226,7 +293,7 @@ class TextControllerTest {
         TopicDTO requestObject = new TopicDTO("topic1");
         HttpEntity<TopicDTO> requestEntity = new HttpEntity<>(requestObject, headers);
         ResponseEntity<String> response = testRestTemplate
-            .postForEntity("http://localhost:"+this.port+"/topicsAndTexts/addNewTopic?userId="+user1.toString()+"&username=user1",
+            .postForEntity("http://localhost:"+this.port+"/topicsAndTexts/addNewTopic?token=editTextToken",
                 requestEntity, String.class);
         assertEquals("incorrect result", HttpStatus.OK, response.getStatusCode());
 
@@ -255,8 +322,6 @@ class TextControllerTest {
     }
     @Test
     public void addNewTopicTest2() throws RestApiException {
-        UUID user1 = UUID.randomUUID();
-
         ArgumentCaptor<UUID> userCap = ArgumentCaptor.forClass(UUID.class);
         ArgumentCaptor<String> userNameCap = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<String> topicNameCap = ArgumentCaptor.forClass(String.class);
@@ -268,7 +333,7 @@ class TextControllerTest {
         TopicDTO requestObject = new TopicDTO("topic1");
         HttpEntity<TopicDTO> requestEntity = new HttpEntity<>(requestObject, headers);
         ResponseEntity<String> response = testRestTemplate
-            .postForEntity("http://localhost:"+this.port+"/topicsAndTexts/addNewTopic?userId="+user1.toString()+"&username=user1",
+            .postForEntity("http://localhost:"+this.port+"/topicsAndTexts/addNewTopic?token=editTextToken",
                 requestEntity, String.class);
         assertEquals("incorrect result", HttpStatus.CONFLICT, response.getStatusCode());
 
@@ -295,11 +360,33 @@ class TextControllerTest {
             topicNameCap.getValue()
         );
     }
+    @Test
+    public void addNewTopicTest3() throws RestApiException {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        TopicDTO requestObject = new TopicDTO("topic1");
+        HttpEntity<TopicDTO> requestEntity = new HttpEntity<>(requestObject, headers);
+        ResponseEntity<String> response = testRestTemplate
+            .postForEntity("http://localhost:"+this.port+"/topicsAndTexts/addNewTopic?token=invalidToken",
+                requestEntity, String.class);
+        assertEquals("incorrect result", HttpStatus.FORBIDDEN, response.getStatusCode());
+        assertEquals("incorrect result", "invalid token", response.getBody());
+    }
+    @Test
+    public void addNewTopicTest4() throws RestApiException {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        TopicDTO requestObject = new TopicDTO("topic1");
+        HttpEntity<TopicDTO> requestEntity = new HttpEntity<>(requestObject, headers);
+        ResponseEntity<String> response = testRestTemplate
+            .postForEntity("http://localhost:"+this.port+"/topicsAndTexts/addNewTopic?token=permissionErrorToken",
+                requestEntity, String.class);
+        assertEquals("incorrect result", HttpStatus.FORBIDDEN, response.getStatusCode());
+        assertEquals("incorrect result", "invalid token", response.getBody());
+    }
 
     @Test
     public void addNewTextTest1() throws RestApiException {
-        UUID user1 = UUID.randomUUID();
-
         ArgumentCaptor<UUID> userCap = ArgumentCaptor.forClass(UUID.class);
         ArgumentCaptor<String> topicNameCap = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<String> textNameCap = ArgumentCaptor.forClass(String.class);
@@ -312,7 +399,7 @@ class TextControllerTest {
         TextEntityDTO requestObject = new TextEntityDTO("topic1", "text1", "a test text");
         HttpEntity<TextEntityDTO> requestEntity = new HttpEntity<>(requestObject, headers);
         ResponseEntity<String> response = testRestTemplate
-            .postForEntity("http://localhost:"+this.port+"/topicsAndTexts/addNewText?userId="+user1.toString(),
+            .postForEntity("http://localhost:"+this.port+"/topicsAndTexts/addNewText?token=editTextToken",
                 requestEntity, String.class);
         assertEquals("incorrect result", HttpStatus.OK, response.getStatusCode());
 
@@ -346,8 +433,6 @@ class TextControllerTest {
     }
     @Test
     public void addNewTextTest2() throws RestApiException {
-        UUID user1 = UUID.randomUUID();
-
         ArgumentCaptor<UUID> userCap = ArgumentCaptor.forClass(UUID.class);
         ArgumentCaptor<String> topicNameCap = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<String> textNameCap = ArgumentCaptor.forClass(String.class);
@@ -360,7 +445,7 @@ class TextControllerTest {
         TextEntityDTO requestObject = new TextEntityDTO("topic1", "text1", "a test text");
         HttpEntity<TextEntityDTO> requestEntity = new HttpEntity<>(requestObject, headers);
         ResponseEntity<String> response = testRestTemplate
-            .postForEntity("http://localhost:"+this.port+"/topicsAndTexts/addNewText?userId="+user1.toString(),
+            .postForEntity("http://localhost:"+this.port+"/topicsAndTexts/addNewText?token=editTextToken",
                 requestEntity, String.class);
         assertEquals("incorrect result", HttpStatus.NOT_FOUND, response.getStatusCode());
 
@@ -394,8 +479,6 @@ class TextControllerTest {
     }
     @Test
     public void addNewTextTest3() throws RestApiException {
-        UUID user1 = UUID.randomUUID();
-
         ArgumentCaptor<UUID> userCap = ArgumentCaptor.forClass(UUID.class);
         ArgumentCaptor<String> topicNameCap = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<String> textNameCap = ArgumentCaptor.forClass(String.class);
@@ -408,7 +491,7 @@ class TextControllerTest {
         TextEntityDTO requestObject = new TextEntityDTO("topic1", "text1", "a test text");
         HttpEntity<TextEntityDTO> requestEntity = new HttpEntity<>(requestObject, headers);
         ResponseEntity<String> response = testRestTemplate
-            .postForEntity("http://localhost:"+this.port+"/topicsAndTexts/addNewText?userId="+user1.toString(),
+            .postForEntity("http://localhost:"+this.port+"/topicsAndTexts/addNewText?token=editTextToken",
                 requestEntity, String.class);
         assertEquals("incorrect result", HttpStatus.CONFLICT, response.getStatusCode());
 
@@ -439,5 +522,29 @@ class TextControllerTest {
             "a test text",
             textCap.getValue()
         );
+    }
+    @Test
+    public void addNewTextTest4() throws RestApiException {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        TextEntityDTO requestObject = new TextEntityDTO("topic1", "text1", "a test text");
+        HttpEntity<TextEntityDTO> requestEntity = new HttpEntity<>(requestObject, headers);
+        ResponseEntity<String> response = testRestTemplate
+            .postForEntity("http://localhost:"+this.port+"/topicsAndTexts/addNewText?token=invalidToken",
+                requestEntity, String.class);
+        assertEquals("incorrect result", HttpStatus.FORBIDDEN, response.getStatusCode());
+        assertEquals("incorrect result", "invalid token", response.getBody());
+    }
+    @Test
+    public void addNewTextTest5() throws RestApiException {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        TextEntityDTO requestObject = new TextEntityDTO("topic1", "text1", "a test text");
+        HttpEntity<TextEntityDTO> requestEntity = new HttpEntity<>(requestObject, headers);
+        ResponseEntity<String> response = testRestTemplate
+            .postForEntity("http://localhost:"+this.port+"/topicsAndTexts/addNewText?token=permissionErrorToken",
+                requestEntity, String.class);
+        assertEquals("incorrect result", HttpStatus.FORBIDDEN, response.getStatusCode());
+        assertEquals("incorrect result", "invalid token", response.getBody());
     }
 }

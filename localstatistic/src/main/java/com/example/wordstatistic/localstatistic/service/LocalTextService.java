@@ -12,6 +12,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
@@ -37,10 +38,17 @@ public class LocalTextService {
     private final TextRepository textRepository;
     private final TopicRepository topicRepository;
 
+    private final KafkaTemplate<String, String> kafkaTemplate;
+
     @Autowired
-    LocalTextService(final TextRepository textRepository, final TopicRepository topicRepository) {
+    LocalTextService(
+        final TextRepository textRepository,
+        final TopicRepository topicRepository,
+        final KafkaTemplate<String, String> kafkaTemplate
+    ) {
         this.textRepository = textRepository;
         this.topicRepository = topicRepository;
+        this.kafkaTemplate = kafkaTemplate;
     }
 
     /**
@@ -122,5 +130,6 @@ public class LocalTextService {
         }
 
         textRepository.save(new Text(null, topic, textName, text));
+        kafkaTemplate.send("text", text);
     }
 }

@@ -9,6 +9,7 @@ import com.example.wordstatistic.globalstatistic.util.WordStatisticStringAnalysi
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
@@ -41,6 +42,7 @@ public class WordService {
      * add a new text.
      * @param text the text
      */
+    @KafkaListener(topics = "text", groupId = "globalstatistic-group")
     public void addNewText(final @NotBlank String text) {
         WordStatisticStringAnalysis.getAllWords(text)
             .forEach(
