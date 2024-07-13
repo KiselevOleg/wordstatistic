@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 public class JwtTokenProvider {
     private static final String JWT_SECRET = "daf66e01593f61a15b857cf433aae03a005812b31234e149036bcc8dee755dbb";
     private static final String JWT_REFRESH_SECRET = "xdsgfwet934y934rf98whefr98we3ur9843yt98hf03jrnoaf0n3va04rnvao34r";
-    private static final Long JWT_EXPIRATION_ACCESS_DATE = 6000000L;
+    private static final Long JWT_EXPIRATION_ACCESS_DATE = 600000L;
     private static final Long JWT_EXPIRATION_REFRESH_DATE = 3600000L;
 
     private static final String CLAIM_USERNAME = "username";

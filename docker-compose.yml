@@ -49,6 +49,18 @@ services:
             - overlay
         volumes:
             - ./postgres_data/user_data:/var/lib/postgresql/data
+    user-redis:
+        image: redis:latest
+        container_name: user-redis
+        restart: unless-stopped
+        environment:
+            - REDIS_REPLICATION_MODE=master
+        #    - REDIS_PASSWORD=redispassword
+        #    - REDIS_USER=user
+        #    - REDIS_USER_PASSWORD=password
+        networks:
+            - overlay
+
     globalstatistic:
         image: wordstatistic_globalstatistic:1.0.0
         container_name: globalstatistic
@@ -94,6 +106,29 @@ services:
             - overlay
         volumes:
             - ./postgres_data/localstatistic_data:/var/lib/postgresql/data
+
+
+    test-redis:
+        image: redis:latest
+        container_name: test-redis
+        restart: unless-stopped
+        environment:
+            - REDIS_REPLICATION_MODE=master
+        networks:
+            - overlay
+    redis-commander:
+        image: rediscommander/redis-commander:latest
+        container_name: redis-commander
+        restart: unless-stopped
+        environment:
+            - REDIS_HOSTS=local:user-redis:6379, local:test-redis:6379
+        networks:
+            - overlay
+        labels:
+            - traefik.enable=true
+            - traefik.http.routers.redis_comander.rule=Host(`rediscomander.localhost`)
+            - traefik.http.routers.redis_comander.entrypoints=admin
+            - traefik.http.routers.redis_comander.middlewares=admin-auth
 
     zookeeper:
         image: confluentinc/cp-zookeeper:latest

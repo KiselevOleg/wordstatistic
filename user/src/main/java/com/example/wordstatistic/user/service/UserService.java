@@ -9,9 +9,11 @@ import com.example.wordstatistic.user.dto.UserDTO;
 import com.example.wordstatistic.user.model.Permission;
 import com.example.wordstatistic.user.model.Role;
 import com.example.wordstatistic.user.model.User;
+import com.example.wordstatistic.user.model.redis.UsedToken;
 import com.example.wordstatistic.user.repository.PermissionRepository;
 import com.example.wordstatistic.user.repository.RoleRepository;
 import com.example.wordstatistic.user.repository.UserRepository;
+import com.example.wordstatistic.user.repository.redis.UsedTokenRepository;
 import com.example.wordstatistic.user.security.JwtTokenProvider;
 import com.example.wordstatistic.user.util.RestApiException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,9 +39,12 @@ public class UserService {
 
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
+
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PermissionRepository permissionRepository;
+
+    private final UsedTokenRepository usedTokenRepository;
 
     @Autowired
     public UserService(
@@ -47,13 +52,15 @@ public class UserService {
         final JwtTokenProvider jwtTokenProvider,
         final UserRepository userRepository,
         final RoleRepository roleRepository,
-        final PermissionRepository permissionRepository
+        final PermissionRepository permissionRepository,
+        final UsedTokenRepository usedTokenRepository
     ) {
         this.authenticationManager = authenticationManager;
         this.jwtTokenProvider = jwtTokenProvider;
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.permissionRepository = permissionRepository;
+        this.usedTokenRepository = usedTokenRepository;
     }
 
     /**
@@ -111,6 +118,10 @@ public class UserService {
         if (!jwtTokenProvider.validateRefreshToken(tokenDTO.refreshToken())) {
             throw INVALID_REFRESH_TOKEN;
         }
+        if (usedTokenRepository.existsByRefreshToken(tokenDTO.refreshToken())) {
+            throw INVALID_REFRESH_TOKEN;
+        }
+        usedTokenRepository.save(new UsedToken(null, tokenDTO.refreshToken(), null));
 
         final User user = userRepository.findByUuid(
             UUID.fromString(jwtTokenProvider.getRefreshUsername(tokenDTO.refreshToken()))
