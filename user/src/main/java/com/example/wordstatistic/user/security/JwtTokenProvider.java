@@ -176,11 +176,11 @@ public class JwtTokenProvider {
     }
 
     /**
-     * get username from JWT refresh token.
+     * get user's id from JWT refresh token.
      * @param refreshToken a refresh token
      * @return a username
      */
-    public String getRefreshUsername(final String refreshToken) {
+    public String getRefreshId(final String refreshToken) {
         return Jwts.parser()
             .verifyWith((SecretKey) refreshKey())
             .build()

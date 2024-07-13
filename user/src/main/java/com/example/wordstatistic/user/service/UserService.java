@@ -124,7 +124,7 @@ public class UserService {
         usedTokenRepository.save(new UsedToken(null, tokenDTO.refreshToken(), null));
 
         final User user = userRepository.findByUuid(
-            UUID.fromString(jwtTokenProvider.getRefreshUsername(tokenDTO.refreshToken()))
+            UUID.fromString(jwtTokenProvider.getRefreshId(tokenDTO.refreshToken()))
         ).orElseThrow();
 
         final String accessToken = jwtTokenProvider.generateAccessToken(user.getName());

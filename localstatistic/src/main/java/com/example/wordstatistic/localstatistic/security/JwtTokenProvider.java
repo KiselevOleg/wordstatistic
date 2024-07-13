@@ -20,10 +20,10 @@ import java.util.stream.Collectors;
  */
 @Component
 public class JwtTokenProvider {
-    private static final String JWT_SECRET = "daf66e01593f61a15b857cf433aae03a005812b31234e149036bcc8dee755dbb";
+    public static final String JWT_SECRET = "daf66e01593f61a15b857cf433aae03a005812b31234e149036bcc8dee755dbb";
 
-    private static final String CLAIM_USERNAME = "username";
-    private static final String CLAIM_PERMISSIONS = "permissions";
+    public static final String CLAIM_USERNAME = "username";
+    public static final String CLAIM_PERMISSIONS = "permissions";
 
     /**
      * get jwt key from a secret word.
