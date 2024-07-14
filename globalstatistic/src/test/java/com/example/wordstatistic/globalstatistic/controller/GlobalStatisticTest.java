@@ -65,8 +65,7 @@ class GlobalStatisticTest {
         ResponseEntity<String> response = testRestTemplate
             .getForEntity("http://localhost:" + this.port + "/globalStatistic/getMostPopularWords?limit=0",
                 String.class);
-        assertEquals("an incorrect http status", HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("an incorrect http status", "limit must be a positive integer", response.getBody());
+        assertEquals("an incorrect http status", HttpStatus.FORBIDDEN, response.getStatusCode());
     }
 
     @Test

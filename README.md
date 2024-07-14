@@ -24,7 +24,7 @@ sudo docker compose up -d
 
 curl -i globalstatistic.localhost:80/globalStatistic/getMostPopularWords?limit=3 && printf '\n'
 
-curl -i -X POST -d "a test text for testing" globalstatistic.localhost:80/globalStatistic/addText?token=...  \
+curl -i -X POST -d "a test text for testing" "globalstatistic.localhost:80/globalStatistic/addText?token=..."  \
     && printf '\n'
 
 

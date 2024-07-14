@@ -51,6 +51,11 @@ public class SecurityConfig {
                 authorize.requestMatchers(
                     HttpMethod.POST, "/topicsAndTexts/addNewText"
                 ).permitAll();
+
+                authorize.requestMatchers(HttpMethod.GET, "/swagger-ui.html").permitAll();
+                authorize.requestMatchers(HttpMethod.GET, "/swagger-ui/**").permitAll();
+                authorize.requestMatchers(HttpMethod.GET, "/v3/**").permitAll();
+
                 authorize.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll();
                 authorize.anyRequest().authenticated();
             });
