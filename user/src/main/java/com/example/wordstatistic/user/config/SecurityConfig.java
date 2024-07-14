@@ -53,6 +53,11 @@ public class SecurityConfig {
                 authorize.requestMatchers(HttpMethod.POST, "/registry/signIn").permitAll();
                 authorize.requestMatchers(HttpMethod.POST, "/registry/signUp").permitAll();
                 authorize.requestMatchers(HttpMethod.POST, "/registry/refreshToken").permitAll();
+
+                authorize.requestMatchers(HttpMethod.GET, "/swagger-ui.html").permitAll();
+                authorize.requestMatchers(HttpMethod.GET, "/swagger-ui/**").permitAll();
+                authorize.requestMatchers(HttpMethod.GET, "/v3/**").permitAll();
+
                 authorize.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll();
                 authorize.anyRequest().authenticated();
             });

@@ -6,6 +6,9 @@ package com.example.wordstatistic.localstatistic.controller;
 import com.example.wordstatistic.localstatistic.security.JwtTokenProvider;
 import com.example.wordstatistic.localstatistic.service.LocalStatisticService;
 import com.example.wordstatistic.localstatistic.util.RestApiException;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +26,10 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
  */
 @RestController
 @RequestMapping("localStatistic")
+@Tag(
+    name = "local statistic controller",
+    description = "a controller for getting statistic for local user's texts"
+)
 @SuppressWarnings("PMD.ReturnCount")
 public class LocalStatisticController {
     private static final String VIEW_TEXT_PERMISSION = "viewText";
@@ -46,9 +53,15 @@ public class LocalStatisticController {
      * @param token a user's jwt token
      * @return the list
      */
+    @Operation(
+        summary = "get most popular user words",
+        description = "get most popular words for all user's texts"
+    )
     @GetMapping(value = "/getMostPopularWordsForUser", produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getMostPopularWordsForUser(
+        @Parameter(description = "count of words", example = "3")
         final @RequestParam @Min(1) Integer limit,
+        @Parameter(description = "token")
         final @RequestParam @NotBlank String token
     ) {
         if (!jwtTokenProvider.validateToken(token)
@@ -67,10 +80,17 @@ public class LocalStatisticController {
      * @param token a user's jwt token
      * @return the list
      */
+    @Operation(
+        summary = "get most popular topic words",
+        description = "get most popular words for all topic's texts"
+    )
     @GetMapping(value = "/getMostPopularWordsForTopic", produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getMostPopularWordsForTopic(
+        @Parameter(description = "a topic name", example = "ownTestTopic")
         final @RequestParam @NotBlank String topicName,
+        @Parameter(description = "count of words", example = "3")
         final @RequestParam @Min(1) Integer limit,
+        @Parameter(description = "token")
         final @RequestParam @NotBlank String token
     ) {
         if (!jwtTokenProvider.validateToken(token)
@@ -93,11 +113,19 @@ public class LocalStatisticController {
      * @param token a user's jwt token
      * @return the list
      */
+    @Operation(
+        summary = "get most popular text words",
+        description = "get most popular words for selected text"
+    )
     @GetMapping(value = "/getMostPopularWordsForText", produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getMostPopularWordsForText(
+        @Parameter(description = "a topic name", example = "ownTestTopic")
         final @RequestParam @NotBlank String topicName,
+        @Parameter(description = "a text name", example = "firstText")
         final @RequestParam @NotBlank String textName,
+        @Parameter(description = "count of words", example = "3")
         final @RequestParam @Min(1) Integer limit,
+        @Parameter(description = "token")
         final @RequestParam @NotBlank String token
     ) {
         if (!jwtTokenProvider.validateToken(token)
