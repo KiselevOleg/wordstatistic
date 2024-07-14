@@ -29,6 +29,11 @@ public class SecurityConfig {
             .authorizeHttpRequests((authorize) -> {
                 authorize.requestMatchers(HttpMethod.GET, "/globalStatistic/getMostPopularWords").permitAll();
                 authorize.requestMatchers(HttpMethod.POST, "/globalStatistic/addText").permitAll();
+
+                authorize.requestMatchers(HttpMethod.GET, "/swagger-ui.html").permitAll();
+                authorize.requestMatchers(HttpMethod.GET, "/swagger-ui/**").permitAll();
+                authorize.requestMatchers(HttpMethod.GET, "/v3/**").permitAll();
+
                 authorize.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll();
                 authorize.anyRequest().authenticated();
             });

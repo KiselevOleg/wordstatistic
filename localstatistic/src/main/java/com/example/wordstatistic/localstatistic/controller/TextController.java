@@ -10,6 +10,9 @@ import com.example.wordstatistic.localstatistic.model.Topic;
 import com.example.wordstatistic.localstatistic.security.JwtTokenProvider;
 import com.example.wordstatistic.localstatistic.service.LocalTextService;
 import com.example.wordstatistic.localstatistic.util.RestApiException;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +27,10 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
  */
 @RestController
 @RequestMapping("topicsAndTexts")
+@Tag(
+    name = "text controller",
+    description = "a controller for add new texts"
+)
 @SuppressWarnings("PMD.ReturnCount")
 public class TextController {
     private static final String VIEW_TEXT_PERMISSION = "viewText";
@@ -44,8 +51,15 @@ public class TextController {
      * @param token a user's jwt token
      * @return a list of the topic names
      */
+    @Operation(
+        summary = "get all topics",
+        description = "get a list of all names of user's topics"
+    )
     @GetMapping(value = "/getAllTopicsForUser", produces = APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> getAllTopicsForUser(final @RequestParam @NotBlank String token) {
+    public ResponseEntity<?> getAllTopicsForUser(
+        @Parameter(description = "token")
+        final @RequestParam @NotBlank String token
+    ) {
         if (!jwtTokenProvider.validateToken(token)
             || !jwtTokenProvider.getPermissions(token).contains(VIEW_TEXT_PERMISSION)) {
             return new ResponseEntity<>(INVALID_TOKEN_ERROR_MESSAGE, HttpStatus.FORBIDDEN);
@@ -61,9 +75,15 @@ public class TextController {
      * @param token a user's jwt token
      * @return a list of the texts names
      */
+    @Operation(
+        summary = "get all topic texts",
+        description = "get a list of all names of texts in a selected topic"
+    )
     @GetMapping(value = "/getAllTextsForTopic", produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getAllTextsForTopic(
+        @Parameter(description = "a topic name", example = "ownTestTopic")
         final @RequestParam @NotBlank String topicName,
+        @Parameter(description = "token")
         final @RequestParam @NotBlank String token
     ) {
         if (!jwtTokenProvider.validateToken(token)
@@ -87,10 +107,17 @@ public class TextController {
      * @param token a user's jwt token
      * @return a string with the text
      */
+    @Operation(
+        summary = "get a text",
+        description = "get a content of a selected text"
+    )
     @GetMapping(value = "/getTextContent", produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getTextContent(
+        @Parameter(description = "a topic name", example = "ownTestTopic")
         final @RequestParam @NotBlank String topicName,
+        @Parameter(description = "a text name", example = "firstText")
         final @RequestParam @NotBlank String textName,
+        @Parameter(description = "token")
         final @RequestParam @NotBlank String token
     ) {
         if (!jwtTokenProvider.validateToken(token)
@@ -113,9 +140,15 @@ public class TextController {
      * @param token a user's jwt token
      * @return error if topic already exists
      */
+    @Operation(
+        summary = "add a new topic",
+        description = "add a new topic for a current user"
+    )
     @PostMapping(value = "/addNewTopic", produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<?> addNewTopic(
+        @Parameter(description = "a topic name", example = "ownTestTopic")
         final @RequestBody @NotNull TopicDTO topicDTO,
+        @Parameter(description = "token")
         final @RequestParam @NotBlank String token
     ) {
         if (!jwtTokenProvider.validateToken(token)
@@ -138,9 +171,15 @@ public class TextController {
      * @param token a user's jwt token
      * @return error if topic does not exist or test already exists
      */
+    @Operation(
+        summary = "add a new text",
+        description = "add a new text in a topic for a current user"
+    )
     @PostMapping(value = "addNewText", produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<?> addNewText(
+        @Parameter(description = "a text description")
         final @RequestBody @NotNull TextEntityDTO textDTO,
+        @Parameter(description = "token")
         final @RequestParam @NotBlank String token
     ) {
         if (!jwtTokenProvider.validateToken(token)
