@@ -3,18 +3,27 @@
  */
 package com.example.wordstatistic.localstatistic.controller;
 
-import com.example.wordstatistic.localstatistic.security.JwtTokenProvider;
+import com.example.wordstatistic.localstatistic.dto.WordDTO;
+import com.example.wordstatistic.localstatistic.security.CustomUserDetailsService;
 import com.example.wordstatistic.localstatistic.service.LocalStatisticService;
 import com.example.wordstatistic.localstatistic.util.RestApiException;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
@@ -23,40 +32,44 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
  */
 @RestController
 @RequestMapping("localStatistic")
+@Tag(
+    name = "local statistic controller",
+    description = "a controller for getting statistic for local user's texts"
+)
+@Validated
 @SuppressWarnings("PMD.ReturnCount")
 public class LocalStatisticController {
-    private static final String VIEW_TEXT_PERMISSION = "viewText";
-    private static final String INVALID_TOKEN_ERROR_MESSAGE = "invalid token";
+    public static final String VIEW_TEXT_PERMISSION = "viewText";
+    public static final String VIEW_TEXT_PERMISSION_CHECK =
+        "hasAuthority('" + VIEW_TEXT_PERMISSION + "')";
 
     private LocalStatisticService localStatisticService;
-    private JwtTokenProvider jwtTokenProvider;
 
     @Autowired
     public LocalStatisticController(
-        final LocalStatisticService localStatisticService,
-        final JwtTokenProvider jwtTokenProvider
+        final LocalStatisticService localStatisticService
     ) {
         this.localStatisticService = localStatisticService;
-        this.jwtTokenProvider = jwtTokenProvider;
     }
 
     /**
      * get a list of most used words in texts for a current user.
      * @param limit a size list limit
-     * @param token a user's jwt token
      * @return the list
      */
+    @Operation(
+        summary = "get most popular user words",
+        description = "get most popular words for all user's texts"
+    )
+    @SecurityRequirement(name = "JWT")
+    @PreAuthorize(VIEW_TEXT_PERMISSION_CHECK)
     @GetMapping(value = "/getMostPopularWordsForUser", produces = APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> getMostPopularWordsForUser(
-        final @RequestParam @Min(1) Integer limit,
-        final @RequestParam @NotBlank String token
+    public ResponseEntity<List<WordDTO>> getMostPopularWordsForUser(
+        @Parameter(description = "count of words", example = "3")
+        final @RequestParam @Min(1) Integer limit
     ) {
-        if (!jwtTokenProvider.validateToken(token)
-            || !jwtTokenProvider.getPermissions(token).contains(VIEW_TEXT_PERMISSION)) {
-            return new ResponseEntity<>(INVALID_TOKEN_ERROR_MESSAGE, HttpStatus.FORBIDDEN);
-        }
         return ResponseEntity.status(HttpStatus.OK).body(
-            localStatisticService.getMostPopularWordsForUser(jwtTokenProvider.getId(token), limit)
+            localStatisticService.getMostPopularWordsForUser(CustomUserDetailsService.getId(), limit)
         );
     }
 
@@ -64,22 +77,24 @@ public class LocalStatisticController {
      * get a list of most used words in texts for a selected topic.
      * @param topicName a topic's name
      * @param limit a size list limit
-     * @param token a user's jwt token
      * @return the list
      */
+    @Operation(
+        summary = "get most popular topic words",
+        description = "get most popular words for all topic's texts"
+    )
+    @SecurityRequirement(name = "JWT")
+    @PreAuthorize(VIEW_TEXT_PERMISSION_CHECK)
     @GetMapping(value = "/getMostPopularWordsForTopic", produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getMostPopularWordsForTopic(
+        @Parameter(description = "a topic name", example = "ownTestTopic")
         final @RequestParam @NotBlank String topicName,
-        final @RequestParam @Min(1) Integer limit,
-        final @RequestParam @NotBlank String token
+        @Parameter(description = "count of words", example = "3")
+        final @RequestParam @Min(1) Integer limit
     ) {
-        if (!jwtTokenProvider.validateToken(token)
-            || !jwtTokenProvider.getPermissions(token).contains(VIEW_TEXT_PERMISSION)) {
-            return new ResponseEntity<>(INVALID_TOKEN_ERROR_MESSAGE, HttpStatus.FORBIDDEN);
-        }
         try {
             return ResponseEntity.status(HttpStatus.OK).body(
-                localStatisticService.getMostPopularWordsForTopic(jwtTokenProvider.getId(token), topicName, limit)
+                localStatisticService.getMostPopularWordsForTopic(CustomUserDetailsService.getId(), topicName, limit)
             );
         } catch (RestApiException e) {
             return ResponseEntity.status(e.getStatus()).body(e.getMessage());
@@ -90,24 +105,27 @@ public class LocalStatisticController {
      * @param topicName a topic's name
      * @param textName a text's name
      * @param limit a size list limit
-     * @param token a user's jwt token
      * @return the list
      */
+    @Operation(
+        summary = "get most popular text words",
+        description = "get most popular words for selected text"
+    )
+    @SecurityRequirement(name = "JWT")
+    @PreAuthorize(VIEW_TEXT_PERMISSION_CHECK)
     @GetMapping(value = "/getMostPopularWordsForText", produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getMostPopularWordsForText(
+        @Parameter(description = "a topic name", example = "ownTestTopic")
         final @RequestParam @NotBlank String topicName,
+        @Parameter(description = "a text name", example = "firstText")
         final @RequestParam @NotBlank String textName,
-        final @RequestParam @Min(1) Integer limit,
-        final @RequestParam @NotBlank String token
+        @Parameter(description = "count of words", example = "3")
+        final @RequestParam @Min(1) Integer limit
     ) {
-        if (!jwtTokenProvider.validateToken(token)
-            || !jwtTokenProvider.getPermissions(token).contains(VIEW_TEXT_PERMISSION)) {
-            return new ResponseEntity<>(INVALID_TOKEN_ERROR_MESSAGE, HttpStatus.FORBIDDEN);
-        }
         try {
             return ResponseEntity.status(HttpStatus.OK).body(
                 localStatisticService.getMostPopularWordsForText(
-                    jwtTokenProvider.getId(token), topicName, textName, limit
+                    CustomUserDetailsService.getId(), topicName, textName, limit
                 )
             );
         } catch (RestApiException e) {

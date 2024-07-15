@@ -5,6 +5,8 @@ package com.example.wordstatistic.user.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.validator.constraints.Length;
+import org.springframework.validation.annotation.Validated;
 
 import java.util.UUID;
 
@@ -17,6 +19,7 @@ import java.util.UUID;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
+@Validated
 @Entity
 @Table(name = "user", schema = "public")
 public class User {
@@ -26,6 +29,7 @@ public class User {
 
     @Column(name = "uuid", nullable = false, unique = true) private UUID uuid;
 
+    @Length(min = 1, max = 50)
     @Column(name = "name", length = 50, nullable = false, unique = true) private String name;
 
     @Column(name = "password", length = 60, nullable = false) private String password;

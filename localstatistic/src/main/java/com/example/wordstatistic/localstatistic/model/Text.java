@@ -7,28 +7,32 @@ import com.example.wordstatistic.localstatistic.dto.TextEntityDTO;
 import com.example.wordstatistic.localstatistic.dto.TextListDTO;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.validator.constraints.Length;
+import org.springframework.validation.annotation.Validated;
 
 /**
  * @author Kiselev Oleg
  */
-@Entity
-@Table(name = "text", schema = "public")
 @Getter
 @Setter
 @ToString
 @EqualsAndHashCode
 @NoArgsConstructor
 @AllArgsConstructor
+@Validated
+@Entity
+@Table(name = "text", schema = "public")
 public class Text {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
     @ManyToOne
     @JoinColumn(name = "topic", nullable = false, unique = false)
     private Topic topic;
-    @Column(name = "name", nullable = false, unique = false)
+    @Length(min = 1, max = 50)
+    @Column(name = "name", length = 50, nullable = false, unique = false)
     private String name;
-    @Column(name = "text", nullable = false, unique = false)
+    @Column(name = "text", nullable = false, unique = false, columnDefinition = "TEXT")
     private String text;
 
     /**
