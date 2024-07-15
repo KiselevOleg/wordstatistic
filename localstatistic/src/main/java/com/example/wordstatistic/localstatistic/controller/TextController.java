@@ -12,6 +12,7 @@ import com.example.wordstatistic.localstatistic.service.LocalTextService;
 import com.example.wordstatistic.localstatistic.util.RestApiException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -58,6 +59,7 @@ public class TextController {
         summary = "get all topics",
         description = "get a list of all names of user's topics"
     )
+    @SecurityRequirement(name = "JWT")
     @PreAuthorize(VIEW_TEXT_PERMISSION_CHECK)
     @GetMapping(value = "/getAllTopicsForUser", produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<List<TopicDTO>> getAllTopicsForUser() {
@@ -75,6 +77,7 @@ public class TextController {
         summary = "get all topic texts",
         description = "get a list of all names of texts in a selected topic"
     )
+    @SecurityRequirement(name = "JWT")
     @PreAuthorize(VIEW_TEXT_PERMISSION_CHECK)
     @GetMapping(value = "/getAllTextsForTopic", produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getAllTextsForTopic(
@@ -101,6 +104,7 @@ public class TextController {
         summary = "get a text",
         description = "get a content of a selected text"
     )
+    @SecurityRequirement(name = "JWT")
     @PreAuthorize(VIEW_TEXT_PERMISSION_CHECK)
     @GetMapping(value = "/getTextContent", produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getTextContent(
@@ -128,6 +132,7 @@ public class TextController {
         summary = "add a new topic",
         description = "add a new topic for a current user"
     )
+    @SecurityRequirement(name = "JWT")
     @PreAuthorize(EDIT_TEXT_PERMISSION_CHECK)
     @PostMapping(value = "/addNewTopic", produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<?> addNewTopic(
@@ -153,6 +158,7 @@ public class TextController {
         summary = "add a new text",
         description = "add a new text in a topic for a current user"
     )
+    @SecurityRequirement(name = "JWT")
     @PreAuthorize(EDIT_TEXT_PERMISSION_CHECK)
     @PostMapping(value = "addNewText", produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<?> addNewText(

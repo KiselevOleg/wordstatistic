@@ -8,6 +8,7 @@ import com.example.wordstatistic.globalstatistic.model.Word;
 import com.example.wordstatistic.globalstatistic.service.WordService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -71,6 +72,7 @@ public class GlobalStatistic {
         summary = "a new text",
         description = "add a new text (changes a most popular word statistic)"
     )
+    @SecurityRequirement(name = "JWT")
     @PreAuthorize("hasAuthority('addTextToGlobal')")
     @PostMapping(value = "/addText", produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<?> addText(

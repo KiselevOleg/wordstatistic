@@ -9,6 +9,7 @@ import com.example.wordstatistic.localstatistic.service.LocalStatisticService;
 import com.example.wordstatistic.localstatistic.util.RestApiException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -58,6 +59,7 @@ public class LocalStatisticController {
         summary = "get most popular user words",
         description = "get most popular words for all user's texts"
     )
+    @SecurityRequirement(name = "JWT")
     @PreAuthorize(VIEW_TEXT_PERMISSION_CHECK)
     @GetMapping(value = "/getMostPopularWordsForUser", produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<List<WordDTO>> getMostPopularWordsForUser(
@@ -79,6 +81,7 @@ public class LocalStatisticController {
         summary = "get most popular topic words",
         description = "get most popular words for all topic's texts"
     )
+    @SecurityRequirement(name = "JWT")
     @PreAuthorize(VIEW_TEXT_PERMISSION_CHECK)
     @GetMapping(value = "/getMostPopularWordsForTopic", produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getMostPopularWordsForTopic(
@@ -106,6 +109,7 @@ public class LocalStatisticController {
         summary = "get most popular text words",
         description = "get most popular words for selected text"
     )
+    @SecurityRequirement(name = "JWT")
     @PreAuthorize(VIEW_TEXT_PERMISSION_CHECK)
     @GetMapping(value = "/getMostPopularWordsForText", produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getMostPopularWordsForText(

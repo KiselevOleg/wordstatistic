@@ -4,8 +4,10 @@
 package com.example.wordstatistic.localstatistic.config;
 
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.info.Contact;
 import io.swagger.v3.oas.annotations.info.Info;
+import io.swagger.v3.oas.annotations.security.SecurityScheme;
 
 /**
  * @author Kiselev Oleg
@@ -20,6 +22,12 @@ import io.swagger.v3.oas.annotations.info.Info;
         //url = "contact information is unavailable"
         )
     )
+)
+@SecurityScheme(
+    name = "JWT",
+    type = SecuritySchemeType.HTTP,
+    bearerFormat = "JWT",
+    scheme = "bearer"
 )
 public class SwaggerConfig {
 }
