@@ -9,12 +9,12 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.when;
@@ -38,8 +38,40 @@ class GlobalStatisticTest {
     @BeforeAll
     static void beforeAll() { }
 
+    private UUID userId;
+    private String username;
+    private Set<String> adminPermissions;
+    private Set<String> userPermissions;
+    private String adminToken;
+    private String userToken;
+    private String incorrectToken;
     @BeforeEach
-    void setUp() { }
+    void setUp() {
+        userId = UUID.randomUUID();
+        username = "user1";
+        adminPermissions = Set.of("addTextToGlobal", "per2");
+        userPermissions = Set.of("per1", "per2");
+
+        adminToken = "adminToken";
+
+        when(jwtTokenProvider.validateToken(adminToken)).thenReturn(true);
+        when(jwtTokenProvider.getPermissions(adminToken)).thenReturn(adminPermissions);
+        when(jwtTokenProvider.getUsername(adminToken)).thenReturn(username);
+        when(jwtTokenProvider.getId(adminToken)).thenReturn(userId);
+
+        userToken = "userToken";
+
+        when(jwtTokenProvider.validateToken(userToken)).thenReturn(true);
+        when(jwtTokenProvider.getPermissions(userToken)).thenReturn(userPermissions);
+        when(jwtTokenProvider.getUsername(userToken)).thenReturn(username);
+        when(jwtTokenProvider.getId(userToken)).thenReturn(userId);
+
+        incorrectToken = "incorrectToken";
+        when(jwtTokenProvider.validateToken(incorrectToken)).thenReturn(false);
+        //when(jwtTokenProvider.getPermissions(incorrectToken)).thenThrow();
+        //when(jwtTokenProvider.getUsername(incorrectToken)).thenThrow();
+        //when(jwtTokenProvider.getId(incorrectToken)).thenThrow();
+    }
     @AfterEach
     void tearDown() { }
 
@@ -65,41 +97,47 @@ class GlobalStatisticTest {
         ResponseEntity<String> response = testRestTemplate
             .getForEntity("http://localhost:" + this.port + "/globalStatistic/getMostPopularWords?limit=0",
                 String.class);
-        assertEquals("an incorrect http status", HttpStatus.FORBIDDEN, response.getStatusCode());
+        assertEquals("an incorrect http status", HttpStatus.UNAUTHORIZED, response.getStatusCode());
     }
 
     @Test
     public void addTextTest1() {
-        when(jwtTokenProvider.validateToken("adminToken")).thenReturn(true);
-        when(jwtTokenProvider.getPermissions("adminToken")).thenReturn(Set.of("editText", "addTextToGlobal"));
-
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        //headers.set("Authorization", "Bearer " + adminToken);
+        headers.setBearerAuth(adminToken);
+        String requestObject = "It's a test string for testing";
+        HttpEntity<String> requestEntity = new HttpEntity<>(requestObject, headers);
         ResponseEntity<String> response = testRestTemplate
-            .postForEntity("http://localhost:"+this.port+"/globalStatistic/addText?token=adminToken",
-                "It's a test string for testing",
+            .postForEntity("http://localhost:"+this.port+"/globalStatistic/addText",
+                requestEntity,
                 String.class);
         assertEquals("an incorrect http status", HttpStatus.OK, response.getStatusCode());
     }
     @Test
     public void addTextTest2() {
-        when(jwtTokenProvider.validateToken("userToken")).thenReturn(true);
-        when(jwtTokenProvider.getPermissions("userToken")).thenReturn(Set.of("editText"));
-
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(userToken);
+        String requestObject = "It's a test string for testing";
+        HttpEntity<String> requestEntity = new HttpEntity<>(requestObject, headers);
         ResponseEntity<String> response = testRestTemplate
-            .postForEntity("http://localhost:"+this.port+"/globalStatistic/addText?token=userToken",
-                "It's a test string for testing",
+            .postForEntity("http://localhost:"+this.port+"/globalStatistic/addText",
+                requestEntity,
                 String.class);
-        assertEquals("an incorrect http status", HttpStatus.FORBIDDEN, response.getStatusCode());
-        assertEquals("an incorrect http status", "invalid token", response.getBody());
+        assertEquals("an incorrect http status", HttpStatus.UNAUTHORIZED, response.getStatusCode());
     }
     @Test
     public void addTextTest3() {
-        when(jwtTokenProvider.validateToken("userToken")).thenReturn(false);
-
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(incorrectToken);
+        String requestObject = "It's a test string for testing";
+        HttpEntity<String> requestEntity = new HttpEntity<>(requestObject, headers);
         ResponseEntity<String> response = testRestTemplate
-            .postForEntity("http://localhost:"+this.port+"/globalStatistic/addText?token=userToken",
-                "It's a test string for testing",
+            .postForEntity("http://localhost:"+this.port+"/globalStatistic/addText",
+                requestEntity,
                 String.class);
-        assertEquals("an incorrect http status", HttpStatus.FORBIDDEN, response.getStatusCode());
-        assertEquals("an incorrect http status", "invalid token", response.getBody());
+        assertEquals("an incorrect http status", HttpStatus.UNAUTHORIZED, response.getStatusCode());
     }
 }

@@ -24,37 +24,47 @@ sudo docker compose up -d
 
 curl -i globalstatistic.localhost:80/globalStatistic/getMostPopularWords?limit=3 && printf '\n'
 
-curl -i -X POST -d "a test text for testing" "globalstatistic.localhost:80/globalStatistic/addText?token=..."  \
+curl -i -H "Content-Type: application/xml" -H "Authorization: Bearer {token}" \
+    -X POST -d "a test text for testing" \
+    "globalstatistic.localhost:80/globalStatistic/addText"  \
     && printf '\n'
 
 
 
-curl -i "localstatistic.localhost:80/topicsAndTexts/getAllTopicsForUser?token=..." \
+curl -i -H "Content-Type: application/xml" -H "Authorization: Bearer {token}" \
+    "localstatistic.localhost:80/topicsAndTexts/getAllTopicsForUser" \
     && printf '\n'
 
-curl -i "localstatistic.localhost:80/topicsAndTexts/getAllTextsForTopic?topicName=topic1&token=..." \
+curl -i -H "Content-Type: application/xml" -H "Authorization: Bearer {token}" \
+    "localstatistic.localhost:80/topicsAndTexts/getAllTextsForTopic?topicName=topic1" \
     && printf '\n'
 
-curl -i "localstatistic.localhost:80/topicsAndTexts/getTextContent?topicName=topic1&textName=text1&token=..." \
+curl -i -H "Content-Type: application/xml" -H "Authorization: Bearer {token}" \
+    "localstatistic.localhost:80/topicsAndTexts/getTextContent?topicName=topic1&textName=text1" \
     && printf '\n'
 
-curl -i -X POST -H "Content-Type: application/json" \
+curl -i -H "Content-Type: application/xml" -H "Authorization: Bearer {token}" \
+    -X POST -H "Content-Type: application/json" \
     -d '{"name": "topic1"}' \
-    "localstatistic.localhost:80/topicsAndTexts/addNewTopic?username=user1&token=..." \
+    "localstatistic.localhost:80/topicsAndTexts/addNewTopic?username=user1" \
     && printf '\n'
 
-curl -i -X POST -H "Content-Type: application/json" \
+curl -i -H "Content-Type: application/xml" -H "Authorization: Bearer {token}" \
+    -X POST -H "Content-Type: application/json" \
     -d '{"topic": "topic1", "name": "text1", "text": "a test text"}' \
-    "localstatistic.localhost:80/topicsAndTexts/addNewText?token=..." \
+    "localstatistic.localhost:80/topicsAndTexts/addNewText" \
     && printf '\n'
 
-curl -i "localstatistic.localhost:80/localStatistic/getMostPopularWordsForUser?limit=3&token=..." \
+curl -i -H "Content-Type: application/xml" -H "Authorization: Bearer {token}" \
+    "localstatistic.localhost:80/localStatistic/getMostPopularWordsForUser?limit=3" \
     && printf '\n'
 
-curl -i "localstatistic.localhost:80/localStatistic/getMostPopularWordsForTopic?topicName=topic1&limit=3&token=..." \
+curl -i -H "Content-Type: application/xml" -H "Authorization: Bearer {token}" \
+    "localstatistic.localhost:80/localStatistic/getMostPopularWordsForTopic?topicName=topic1&limit=3" \
     && printf '\n'
 
-curl -i "localstatistic.localhost:80/localStatistic/getMostPopularWordsForText?topicName=topic1&textName=text1&limit=3&token=..." \
+curl -i -H "Content-Type: application/xml" -H "Authorization: Bearer {token}" \
+    "localstatistic.localhost:80/localStatistic/getMostPopularWordsForText?topicName=topic1&textName=text1&limit=3" \
     && printf '\n'
 
 
