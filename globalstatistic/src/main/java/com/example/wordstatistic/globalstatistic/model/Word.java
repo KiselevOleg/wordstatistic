@@ -5,28 +5,32 @@ package com.example.wordstatistic.globalstatistic.model;
 
 import com.example.wordstatistic.globalstatistic.dto.WordDTO;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Min;
 import lombok.*;
-import org.hibernate.annotations.Check;
+import org.hibernate.validator.constraints.Length;
+import org.springframework.validation.annotation.Validated;
 
 /**
  * @author Kiselev Oleg
  */
-@Entity
-@Table(name = "word", schema = "public")
 @Getter
 @Setter
 @ToString
 @EqualsAndHashCode
 @NoArgsConstructor
 @AllArgsConstructor
+@Validated
+@Entity
+@Table(name = "word", schema = "public")
 public class Word {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
     @Column(name = "name", nullable = false, unique = true)
+    @Length(min = 1, max = 50)
     private String name;
     @Column(name = "count", nullable = false, unique = false)
-    @Check(constraints = "count>=0")
+    @Min(0)
     private Integer count;
 
     /**

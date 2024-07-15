@@ -5,6 +5,8 @@ package com.example.wordstatistic.user.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.validator.constraints.Length;
+import org.springframework.validation.annotation.Validated;
 
 import java.util.Set;
 
@@ -17,6 +19,7 @@ import java.util.Set;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
+@Validated
 @Entity
 @Table(name = "user_role", schema = "public")
 public class Role {
@@ -24,7 +27,8 @@ public class Role {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id") private Integer id;
 
-    @Column(name = "name", length = 20, nullable = false, unique = true) private String name;
+    @Length(min = 1, max = 50)
+    @Column(name = "name", length = 50, nullable = false, unique = true) private String name;
 
     @ManyToMany(fetch = FetchType.EAGER, cascade = {
         CascadeType.PERSIST,

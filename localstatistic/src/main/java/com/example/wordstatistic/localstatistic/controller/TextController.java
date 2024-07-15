@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -35,6 +36,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
     name = "text controller",
     description = "a controller for add new texts"
 )
+@Validated
 @SuppressWarnings("PMD.ReturnCount")
 public class TextController {
     public static final String VIEW_TEXT_PERMISSION = "viewText";

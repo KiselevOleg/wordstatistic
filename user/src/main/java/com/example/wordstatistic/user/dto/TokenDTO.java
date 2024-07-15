@@ -6,6 +6,7 @@ package com.example.wordstatistic.user.dto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
+import org.springframework.validation.annotation.Validated;
 
 /**
  * tokens for getting jwt access.
@@ -13,6 +14,7 @@ import jakarta.validation.constraints.NotBlank;
  * @param refreshToken a token for getting a new tokens pair
  */
 @Schema(description = "an token bunch entity")
+@Validated
 public record TokenDTO(
     @Schema(
         description = "an access token for getting access for all resources (small live time)",

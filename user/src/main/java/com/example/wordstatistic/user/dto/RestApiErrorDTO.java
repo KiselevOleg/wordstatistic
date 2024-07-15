@@ -6,12 +6,14 @@ package com.example.wordstatistic.user.dto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
+import org.springframework.validation.annotation.Validated;
 
 /**
  * a rest api error format.
  * @param message a description of the error
  */
 @Schema(description = "an error entity")
+@Validated
 public record RestApiErrorDTO(
     @Schema(description = "message of an error", example = "this username is found")
     @JsonProperty("message") @NotBlank String message

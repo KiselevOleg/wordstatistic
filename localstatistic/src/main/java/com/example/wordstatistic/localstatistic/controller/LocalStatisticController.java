@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -35,6 +36,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
     name = "local statistic controller",
     description = "a controller for getting statistic for local user's texts"
 )
+@Validated
 @SuppressWarnings("PMD.ReturnCount")
 public class LocalStatisticController {
     public static final String VIEW_TEXT_PERMISSION = "viewText";
