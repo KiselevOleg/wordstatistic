@@ -7,6 +7,9 @@ import com.example.wordstatistic.localstatistic.model.Text;
 import com.example.wordstatistic.localstatistic.model.Topic;
 import com.example.wordstatistic.localstatistic.repository.TextRepository;
 import com.example.wordstatistic.localstatistic.repository.TopicRepository;
+import com.example.wordstatistic.localstatistic.repository.redis.GetMostPopularWordsListForTextCashRepository;
+import com.example.wordstatistic.localstatistic.repository.redis.GetMostPopularWordsListForTopicCashRepository;
+import com.example.wordstatistic.localstatistic.repository.redis.GetMostPopularWordsListForUserCashRepository;
 import com.example.wordstatistic.localstatistic.util.RestApiException;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -38,17 +41,27 @@ public class LocalTextService {
     private final TextRepository textRepository;
     private final TopicRepository topicRepository;
 
+    private final GetMostPopularWordsListForUserCashRepository getMostPopularWordsListForUserCashRepository;
+    private final GetMostPopularWordsListForTopicCashRepository getMostPopularWordsListForTopicCashRepository;
+    private final GetMostPopularWordsListForTextCashRepository getMostPopularWordsListForTextCashRepository;
+
     private final KafkaTemplate<String, String> kafkaTemplate;
 
     @Autowired
     LocalTextService(
         final TextRepository textRepository,
         final TopicRepository topicRepository,
-        final KafkaTemplate<String, String> kafkaTemplate
+        final KafkaTemplate<String, String> kafkaTemplate,
+        final GetMostPopularWordsListForUserCashRepository getMostPopularWordsListForUserCashRepository,
+        final GetMostPopularWordsListForTopicCashRepository getMostPopularWordsListForTopicCashRepository,
+        final GetMostPopularWordsListForTextCashRepository getMostPopularWordsListForTextCashRepository
     ) {
         this.textRepository = textRepository;
         this.topicRepository = topicRepository;
         this.kafkaTemplate = kafkaTemplate;
+        this.getMostPopularWordsListForUserCashRepository = getMostPopularWordsListForUserCashRepository;
+        this.getMostPopularWordsListForTopicCashRepository = getMostPopularWordsListForTopicCashRepository;
+        this.getMostPopularWordsListForTextCashRepository = getMostPopularWordsListForTextCashRepository;
     }
 
     /**
@@ -108,7 +121,6 @@ public class LocalTextService {
         }
 
         topicRepository.save(new Topic(null, userId, userName, topicName));
-
     }
 
     /**
@@ -131,5 +143,16 @@ public class LocalTextService {
 
         textRepository.save(new Text(null, topic, textName, text));
         kafkaTemplate.send("text", text);
+
+        final Integer textId = textRepository.findByTopicAndName(topic, textName).orElseThrow().getId();
+        getMostPopularWordsListForUserCashRepository.deleteByUserIdAndLimitLessThan(
+            userId, Integer.MAX_VALUE
+        );
+        getMostPopularWordsListForTopicCashRepository.deleteByUserIdAndTopicIdLimitLessThan(
+            userId, topic.getId(), Integer.MAX_VALUE
+        );
+        getMostPopularWordsListForTextCashRepository.deleteByUserIdAndTopicIdAndTextIdAndLimitLessThan(
+            userId, topic.getId(), textId, Integer.MAX_VALUE
+        );
     }
 }

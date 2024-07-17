@@ -10,6 +10,8 @@ import jakarta.validation.constraints.NotBlank;
 import org.hibernate.validator.constraints.Length;
 import org.springframework.validation.annotation.Validated;
 
+import java.io.Serializable;
+
 /**
  * a word dto for local statistics.
  * @param name a word name
@@ -22,6 +24,5 @@ public record WordDTO(
     @Length(min = 1, max = 50)
     @JsonProperty("name") @NotBlank String name,
     @Schema(description = "count", example = "143")
-    @Min(0)
     @JsonProperty("count") @Min(0) Integer count
-) { }
+) implements Serializable { }

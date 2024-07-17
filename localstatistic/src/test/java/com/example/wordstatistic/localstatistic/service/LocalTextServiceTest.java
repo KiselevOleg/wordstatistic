@@ -4,13 +4,14 @@ import com.example.wordstatistic.localstatistic.model.Text;
 import com.example.wordstatistic.localstatistic.model.Topic;
 import com.example.wordstatistic.localstatistic.repository.TextRepository;
 import com.example.wordstatistic.localstatistic.repository.TopicRepository;
+import com.example.wordstatistic.localstatistic.repository.redis.GetMostPopularWordsListForTextCashRepository;
+import com.example.wordstatistic.localstatistic.repository.redis.GetMostPopularWordsListForTopicCashRepository;
+import com.example.wordstatistic.localstatistic.repository.redis.GetMostPopularWordsListForUserCashRepository;
 import com.example.wordstatistic.localstatistic.util.RestApiException;
-import jakarta.validation.constraints.NotBlank;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
@@ -34,6 +35,13 @@ class LocalTextServiceTest {
     private final LocalTextService localTextService;
 
     @MockBean
+    private final GetMostPopularWordsListForUserCashRepository getMostPopularWordsListForUserCashRepository;
+    @MockBean
+    private final GetMostPopularWordsListForTopicCashRepository getMostPopularWordsListForTopicCashRepository;
+    @MockBean
+    private final GetMostPopularWordsListForTextCashRepository getMostPopularWordsListForTextCashRepository;
+
+    @MockBean
     private KafkaTemplate<String, String> kafkaTemplate;
 
     private UUID user1, user2, user3;
@@ -42,11 +50,17 @@ class LocalTextServiceTest {
     public LocalTextServiceTest(
         final TextRepository textRepository,
         final TopicRepository topicRepository,
-        final LocalTextService localTextService
+        final LocalTextService localTextService,
+        final GetMostPopularWordsListForUserCashRepository getMostPopularWordsListForUserCashRepository,
+        final GetMostPopularWordsListForTopicCashRepository getMostPopularWordsListForTopicCashRepository,
+        final GetMostPopularWordsListForTextCashRepository getMostPopularWordsListForTextCashRepository
     ) {
         this.textRepository = textRepository;
         this.topicRepository = topicRepository;
         this.localTextService = localTextService;
+        this.getMostPopularWordsListForUserCashRepository = getMostPopularWordsListForUserCashRepository;
+        this.getMostPopularWordsListForTopicCashRepository = getMostPopularWordsListForTopicCashRepository;
+        this.getMostPopularWordsListForTextCashRepository = getMostPopularWordsListForTextCashRepository;
     }
 
     @AfterAll
@@ -359,6 +373,34 @@ class LocalTextServiceTest {
         ArgumentCaptor<String> kafkaMessageCap = ArgumentCaptor.forClass(String.class);
         when(kafkaTemplate.send(kafkaTopicCap.capture(), kafkaMessageCap.capture())).thenReturn(null);
 
+        //GetMostPopularWordsListForUserCashRepository getMostPopularWordsListForUserCashRepository;
+        //GetMostPopularWordsListForTopicCashRepository getMostPopularWordsListForTopicCashRepository;
+        //GetMostPopularWordsListForTextCashRepository getMostPopularWordsListForTextCashRepository;
+        ArgumentCaptor<UUID> getMostPopularWordsListForUserCashUserIdCap = ArgumentCaptor.forClass(UUID.class);
+        ArgumentCaptor<Integer> getMostPopularWordsListForUserCashLimitCap = ArgumentCaptor.forClass(Integer.class);
+        doNothing().when(getMostPopularWordsListForUserCashRepository).deleteByUserIdAndLimitLessThan(
+            getMostPopularWordsListForUserCashUserIdCap.capture(),
+            getMostPopularWordsListForUserCashLimitCap.capture()
+        );
+        ArgumentCaptor<UUID> getMostPopularWordsListForTopicCashUserIdCap = ArgumentCaptor.forClass(UUID.class);
+        ArgumentCaptor<Integer> getMostPopularWordsListForTopicCashTopicIdCap = ArgumentCaptor.forClass(Integer.class);
+        ArgumentCaptor<Integer> getMostPopularWordsListForTopicCashLimitCap = ArgumentCaptor.forClass(Integer.class);
+        doNothing().when(getMostPopularWordsListForTopicCashRepository).deleteByUserIdAndTopicIdLimitLessThan(
+            getMostPopularWordsListForTopicCashUserIdCap.capture(),
+            getMostPopularWordsListForTopicCashTopicIdCap.capture(),
+            getMostPopularWordsListForTopicCashLimitCap.capture()
+        );
+        ArgumentCaptor<UUID> getMostPopularWordsListForTextCashUserIdCap = ArgumentCaptor.forClass(UUID.class);
+        ArgumentCaptor<Integer> getMostPopularWordsListForTextCashTopicIdCap = ArgumentCaptor.forClass(Integer.class);
+        ArgumentCaptor<Integer> getMostPopularWordsListForTextCashTextIdCap = ArgumentCaptor.forClass(Integer.class);
+        ArgumentCaptor<Integer> getMostPopularWordsListForTextCashLimitCap = ArgumentCaptor.forClass(Integer.class);
+        doNothing().when(getMostPopularWordsListForTextCashRepository).deleteByUserIdAndTopicIdAndTextIdAndLimitLessThan(
+            getMostPopularWordsListForTextCashUserIdCap.capture(),
+            getMostPopularWordsListForTextCashTopicIdCap.capture(),
+            getMostPopularWordsListForTextCashTextIdCap.capture(),
+            getMostPopularWordsListForTextCashLimitCap.capture()
+        );
+
         try {
             localTextService.addText(user1, "topic1", "text113", "a new text");
         } catch (RestApiException e) {
@@ -375,6 +417,72 @@ class LocalTextServiceTest {
 
         assertEquals("kafka message incorrect", "text", kafkaTopicCap.getValue());
         assertEquals("kafka message incorrect", "a new text", kafkaMessageCap.getValue());
+
+        assertEquals(
+            "incorrect cash",
+            1,
+            getMostPopularWordsListForUserCashUserIdCap.getAllValues().size()
+        );
+        assertEquals(
+            "incorrect cash",
+            user1,
+            getMostPopularWordsListForUserCashUserIdCap.getValue()
+        );
+        assertEquals(
+            "incorrect cash",
+            Integer.MAX_VALUE,
+            getMostPopularWordsListForUserCashLimitCap.getValue()
+        );
+
+        assertEquals(
+            "incorrect cash",
+            1,
+            getMostPopularWordsListForTopicCashUserIdCap.getAllValues().size()
+        );
+        assertEquals(
+            "incorrect cash",
+            user1,
+            getMostPopularWordsListForTopicCashUserIdCap.getValue()
+        );
+        assertEquals(
+            "incorrect cash",
+            topicRepository.findByUserIdAndName(user1, "topic1").get().getId(),
+            getMostPopularWordsListForTopicCashTopicIdCap.getValue()
+        );
+        assertEquals(
+            "incorrect cash",
+            Integer.MAX_VALUE,
+            getMostPopularWordsListForTopicCashLimitCap.getValue()
+        );
+
+        assertEquals(
+            "incorrect cash",
+            1,
+            getMostPopularWordsListForTextCashUserIdCap.getAllValues().size()
+        );
+        assertEquals(
+            "incorrect cash",
+            user1,
+            getMostPopularWordsListForTextCashUserIdCap.getValue()
+        );
+        assertEquals(
+            "incorrect cash",
+            topicRepository.findByUserIdAndName(user1, "topic1").get().getId(),
+            getMostPopularWordsListForTextCashTopicIdCap.getValue()
+        );
+        assertEquals(
+            "incorrect cash",
+            textRepository.findByTopicAndName(
+                topicRepository.findByUserIdAndName(user1, "topic1").get(),
+                "text113"
+            ).get().getId(),
+            getMostPopularWordsListForTextCashTextIdCap.getValue()
+        );
+        assertEquals(
+            "incorrect cash",
+            Integer.MAX_VALUE,
+            getMostPopularWordsListForTextCashLimitCap.getValue()
+        );
     }
     @Test
     public void addTextTest2() {

@@ -4,6 +4,12 @@
 package com.example.wordstatistic.localstatistic.service;
 
 import com.example.wordstatistic.localstatistic.model.Text;
+import com.example.wordstatistic.localstatistic.model.redis.GetMostPopularWordsListForTextCash;
+import com.example.wordstatistic.localstatistic.model.redis.GetMostPopularWordsListForTopicCash;
+import com.example.wordstatistic.localstatistic.model.redis.GetMostPopularWordsListForUserCash;
+import com.example.wordstatistic.localstatistic.repository.redis.GetMostPopularWordsListForTextCashRepository;
+import com.example.wordstatistic.localstatistic.repository.redis.GetMostPopularWordsListForTopicCashRepository;
+import com.example.wordstatistic.localstatistic.repository.redis.GetMostPopularWordsListForUserCashRepository;
 import com.example.wordstatistic.localstatistic.util.WordStatisticStringAnalysis;
 import com.example.wordstatistic.localstatistic.dto.WordDTO;
 import com.example.wordstatistic.localstatistic.model.Topic;
@@ -34,10 +40,23 @@ public class LocalStatisticService {
     private final TextRepository textRepository;
     private final TopicRepository topicRepository;
 
+    private final GetMostPopularWordsListForUserCashRepository getMostPopularWordsListForUserCashRepository;
+    private final GetMostPopularWordsListForTopicCashRepository getMostPopularWordsListForTopicCashRepository;
+    private final GetMostPopularWordsListForTextCashRepository getMostPopularWordsListForTextCashRepository;
+
     @Autowired
-    public LocalStatisticService(final TextRepository textRepository, final TopicRepository topicRepository) {
+    public LocalStatisticService(
+        final TextRepository textRepository,
+        final TopicRepository topicRepository,
+        final GetMostPopularWordsListForUserCashRepository getMostPopularWordsListForUserCashRepository,
+        final GetMostPopularWordsListForTopicCashRepository getMostPopularWordsListForTopicCashRepository,
+        final GetMostPopularWordsListForTextCashRepository getMostPopularWordsListForTextCashRepository
+    ) {
         this.textRepository = textRepository;
         this.topicRepository = topicRepository;
+        this.getMostPopularWordsListForUserCashRepository = getMostPopularWordsListForUserCashRepository;
+        this.getMostPopularWordsListForTopicCashRepository = getMostPopularWordsListForTopicCashRepository;
+        this.getMostPopularWordsListForTextCashRepository = getMostPopularWordsListForTextCashRepository;
     }
 
     /**
@@ -49,17 +68,35 @@ public class LocalStatisticService {
     public List<WordDTO> getMostPopularWordsForUser(
         final @NotNull UUID userId,
         final @Min(1) Integer limit) {
-        final Map<String, Integer> words = new HashMap<>();
-        topicRepository.findAllByUserId(userId).forEach((topic) ->
-                textRepository.findAllByTopic(topic)
-                    .forEach((e) -> WordStatisticStringAnalysis.getAllWords(words, e.getText()))
-        );
+        return getMostPopularWordsListForUserCashRepository
+            .findByUserId(userId)
+            .filter(e -> e.getLimit() >= limit)
+            .map(e -> {
+                e.setResult(e.getResult().stream().limit(limit).toList());
+                return e.getResult();
+            })
+            .orElseGet(() -> {
+                final Map<String, Integer> words = new HashMap<>();
+                topicRepository.findAllByUserId(userId).forEach((topic) ->
+                    textRepository.findAllByTopic(topic)
+                        .forEach((e) -> WordStatisticStringAnalysis.getAllWords(words, e.getText()))
+                );
+                List<WordDTO> list = words.entrySet()
+                        .stream().map((e) -> new WordDTO(e.getKey(), e.getValue())).toList();
+                list = new ArrayList<>(list);
+                list.sort((a, b) -> b.count() - a.count());
+                list = list.stream().limit(limit).toList();
 
-        List<WordDTO> listWords = words.entrySet()
-            .stream().map((e) -> new WordDTO(e.getKey(), e.getValue())).toList();
-        listWords = new ArrayList<>(listWords);
-        listWords.sort((a, b) -> b.count() - a.count());
-        return listWords.stream().limit(limit).toList();
+                getMostPopularWordsListForUserCashRepository.deleteByUserIdAndLimitLessThan(
+                    userId, limit
+                );
+                getMostPopularWordsListForUserCashRepository.save(
+                    new GetMostPopularWordsListForUserCash(
+                        null, limit, userId, list, null
+                    )
+                );
+                return list;
+            });
     }
 
     /**
@@ -76,16 +113,34 @@ public class LocalStatisticService {
         final @Min(1) Integer limit) throws RestApiException {
         final Topic topic = topicRepository.findByUserIdAndName(userId, topicName)
             .orElseThrow(() -> TOPIC_NOT_FOUND_ERROR);
+        return getMostPopularWordsListForTopicCashRepository
+            .findByUserIdAndTopicId(userId, topic.getId())
+            .filter(e -> e.getLimit() >= limit)
+            .map(e -> {
+                e.setResult(e.getResult().stream().limit(limit).toList());
+                return e.getResult();
+            })
+            .orElseGet(() -> {
+                final Map<String, Integer> words = new HashMap<>();
+                textRepository.findAllByTopic(topic)
+                    .forEach((e) -> WordStatisticStringAnalysis.getAllWords(words, e.getText()));
 
-        final Map<String, Integer> words = new HashMap<>();
-        textRepository.findAllByTopic(topic)
-            .forEach((e) -> WordStatisticStringAnalysis.getAllWords(words, e.getText()));
+                List<WordDTO> list = words.entrySet()
+                    .stream().map((e) -> new WordDTO(e.getKey(), e.getValue())).toList();
+                list = new ArrayList<>(list);
+                list.sort((a, b) -> b.count() - a.count());
+                list = list.stream().limit(limit).toList();
 
-        List<WordDTO> listWords = words.entrySet()
-            .stream().map((e) -> new WordDTO(e.getKey(), e.getValue())).toList();
-        listWords = new ArrayList<>(listWords);
-        listWords.sort((a, b) -> b.count() - a.count());
-        return listWords.stream().limit(limit).toList();
+                getMostPopularWordsListForTopicCashRepository.deleteByUserIdAndTopicIdLimitLessThan(
+                    userId, topic.getId(), limit
+                );
+                getMostPopularWordsListForTopicCashRepository.save(
+                    new GetMostPopularWordsListForTopicCash(
+                        null, limit, userId, topic.getId(), list, null
+                    )
+                );
+                return list;
+            });
     }
 
     /**
@@ -106,13 +161,31 @@ public class LocalStatisticService {
             .orElseThrow(() -> TOPIC_NOT_FOUND_ERROR);
         final Text text = textRepository.findByTopicAndName(topic, textName)
             .orElseThrow(() -> TEXT_NOT_FOUND_ERROR);
+        return getMostPopularWordsListForTextCashRepository
+            .findByUserIdAndTopicIdAndTextId(userId, topic.getId(), text.getId())
+            .filter(e -> e.getLimit() >= limit)
+            .map(e -> {
+                e.setResult(e.getResult().stream().limit(limit).toList());
+                return e.getResult();
+            })
+            .orElseGet(() -> {
+                final Map<String, Integer> words = WordStatisticStringAnalysis.getAllWords(text.getText());
 
-        final Map<String, Integer> words = WordStatisticStringAnalysis.getAllWords(text.getText());
+                List<WordDTO> list = words.entrySet()
+                    .stream().map((e) -> new WordDTO(e.getKey(), e.getValue())).toList();
+                list = new ArrayList<>(list);
+                list.sort((a, b) -> b.count() - a.count());
+                list = list.stream().limit(limit).toList();
 
-        List<WordDTO> listWords = words.entrySet()
-            .stream().map((e) -> new WordDTO(e.getKey(), e.getValue())).toList();
-        listWords = new ArrayList<>(listWords);
-        listWords.sort((a, b) -> b.count() - a.count());
-        return listWords.stream().limit(limit).toList();
+                getMostPopularWordsListForTextCashRepository.deleteByUserIdAndTopicIdAndTextIdAndLimitLessThan(
+                    userId, topic.getId(), text.getId(), limit
+                );
+                getMostPopularWordsListForTextCashRepository.save(
+                    new GetMostPopularWordsListForTextCash(
+                        null, limit, userId, topic.getId(), text.getId(), list, null
+                    )
+                );
+                return list;
+            });
     }
 }
