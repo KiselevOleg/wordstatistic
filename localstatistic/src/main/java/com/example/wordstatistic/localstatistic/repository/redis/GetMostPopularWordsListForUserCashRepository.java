@@ -17,5 +17,5 @@ import java.util.UUID;
 public interface GetMostPopularWordsListForUserCashRepository
     extends CrudRepository<GetMostPopularWordsListForUserCash, Long> {
     Optional<GetMostPopularWordsListForUserCash> findByUserId(UUID userId);
-    void deleteByUserIdAndLimitLessThan(UUID userId, Integer limit);
+    //void deleteByUserId(UUID userId);
 }

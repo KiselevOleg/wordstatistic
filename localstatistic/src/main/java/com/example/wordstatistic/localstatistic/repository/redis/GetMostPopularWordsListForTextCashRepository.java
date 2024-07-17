@@ -19,7 +19,7 @@ public interface GetMostPopularWordsListForTextCashRepository
     Optional<GetMostPopularWordsListForTextCash> findByUserIdAndTopicIdAndTextId(
         UUID userId, Integer topicId, Integer textId
     );
-    void deleteByUserIdAndTopicIdAndTextIdAndLimitLessThan(
-        UUID userId, Integer topicId, Integer textId, Integer limit
-    );
+    //void deleteByUserIdAndTopicIdAndTextId(
+    //    UUID userId, Integer topicId, Integer textId
+    //);
 }

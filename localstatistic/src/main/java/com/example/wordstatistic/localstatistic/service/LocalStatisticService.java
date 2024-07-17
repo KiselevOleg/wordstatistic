@@ -25,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * @author Kiselev Oleg
@@ -68,8 +69,13 @@ public class LocalStatisticService {
     public List<WordDTO> getMostPopularWordsForUser(
         final @NotNull UUID userId,
         final @Min(1) Integer limit) {
+        final AtomicReference<Optional<Long>> cashId = new AtomicReference<>(Optional.empty());
         return getMostPopularWordsListForUserCashRepository
             .findByUserId(userId)
+            .map(e -> {
+                cashId.set(Optional.of(e.getId()));
+                return e;
+            })
             .filter(e -> e.getLimit() >= limit)
             .map(e -> {
                 e.setResult(e.getResult().stream().limit(limit).toList());
@@ -87,9 +93,10 @@ public class LocalStatisticService {
                 list.sort((a, b) -> b.count() - a.count());
                 list = list.stream().limit(limit).toList();
 
-                getMostPopularWordsListForUserCashRepository.deleteByUserIdAndLimitLessThan(
-                    userId, limit
-                );
+                cashId.get().map(e -> {
+                    getMostPopularWordsListForUserCashRepository.deleteById(e);
+                    return e;
+                });
                 getMostPopularWordsListForUserCashRepository.save(
                     new GetMostPopularWordsListForUserCash(
                         null, limit, userId, list, null
@@ -113,8 +120,13 @@ public class LocalStatisticService {
         final @Min(1) Integer limit) throws RestApiException {
         final Topic topic = topicRepository.findByUserIdAndName(userId, topicName)
             .orElseThrow(() -> TOPIC_NOT_FOUND_ERROR);
+        final AtomicReference<Optional<Long>> cashId = new AtomicReference<>(Optional.empty());
         return getMostPopularWordsListForTopicCashRepository
             .findByUserIdAndTopicId(userId, topic.getId())
+            .map(e -> {
+                cashId.set(Optional.of(e.getId()));
+                return e;
+            })
             .filter(e -> e.getLimit() >= limit)
             .map(e -> {
                 e.setResult(e.getResult().stream().limit(limit).toList());
@@ -131,9 +143,10 @@ public class LocalStatisticService {
                 list.sort((a, b) -> b.count() - a.count());
                 list = list.stream().limit(limit).toList();
 
-                getMostPopularWordsListForTopicCashRepository.deleteByUserIdAndTopicIdLimitLessThan(
-                    userId, topic.getId(), limit
-                );
+                cashId.get().map(e -> {
+                    getMostPopularWordsListForTopicCashRepository.deleteById(e);
+                    return e;
+                });
                 getMostPopularWordsListForTopicCashRepository.save(
                     new GetMostPopularWordsListForTopicCash(
                         null, limit, userId, topic.getId(), list, null
@@ -161,8 +174,13 @@ public class LocalStatisticService {
             .orElseThrow(() -> TOPIC_NOT_FOUND_ERROR);
         final Text text = textRepository.findByTopicAndName(topic, textName)
             .orElseThrow(() -> TEXT_NOT_FOUND_ERROR);
+        final AtomicReference<Optional<Long>> cashId = new AtomicReference<>(Optional.empty());
         return getMostPopularWordsListForTextCashRepository
             .findByUserIdAndTopicIdAndTextId(userId, topic.getId(), text.getId())
+            .map(e -> {
+                cashId.set(Optional.of(e.getId()));
+                return e;
+            })
             .filter(e -> e.getLimit() >= limit)
             .map(e -> {
                 e.setResult(e.getResult().stream().limit(limit).toList());
@@ -177,9 +195,10 @@ public class LocalStatisticService {
                 list.sort((a, b) -> b.count() - a.count());
                 list = list.stream().limit(limit).toList();
 
-                getMostPopularWordsListForTextCashRepository.deleteByUserIdAndTopicIdAndTextIdAndLimitLessThan(
-                    userId, topic.getId(), text.getId(), limit
-                );
+                cashId.get().map(e -> {
+                    getMostPopularWordsListForTextCashRepository.deleteById(e);
+                    return e;
+                });
                 getMostPopularWordsListForTextCashRepository.save(
                     new GetMostPopularWordsListForTextCash(
                         null, limit, userId, topic.getId(), text.getId(), list, null

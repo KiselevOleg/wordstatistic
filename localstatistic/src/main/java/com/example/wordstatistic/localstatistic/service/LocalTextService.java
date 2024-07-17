@@ -5,6 +5,8 @@ package com.example.wordstatistic.localstatistic.service;
 
 import com.example.wordstatistic.localstatistic.model.Text;
 import com.example.wordstatistic.localstatistic.model.Topic;
+import com.example.wordstatistic.localstatistic.model.redis.GetMostPopularWordsListForTopicCash;
+import com.example.wordstatistic.localstatistic.model.redis.GetMostPopularWordsListForUserCash;
 import com.example.wordstatistic.localstatistic.repository.TextRepository;
 import com.example.wordstatistic.localstatistic.repository.TopicRepository;
 import com.example.wordstatistic.localstatistic.repository.redis.GetMostPopularWordsListForTextCashRepository;
@@ -144,15 +146,18 @@ public class LocalTextService {
         textRepository.save(new Text(null, topic, textName, text));
         kafkaTemplate.send("text", text);
 
-        final Integer textId = textRepository.findByTopicAndName(topic, textName).orElseThrow().getId();
-        getMostPopularWordsListForUserCashRepository.deleteByUserIdAndLimitLessThan(
-            userId, Integer.MAX_VALUE
-        );
-        getMostPopularWordsListForTopicCashRepository.deleteByUserIdAndTopicIdLimitLessThan(
-            userId, topic.getId(), Integer.MAX_VALUE
-        );
-        getMostPopularWordsListForTextCashRepository.deleteByUserIdAndTopicIdAndTextIdAndLimitLessThan(
-            userId, topic.getId(), textId, Integer.MAX_VALUE
-        );
+        Long cashId;
+        cashId = getMostPopularWordsListForUserCashRepository.findByUserId(
+            userId
+        ).map(GetMostPopularWordsListForUserCash::getId).orElse(null);
+        if (cashId != null) {
+            getMostPopularWordsListForUserCashRepository.deleteById(cashId);
+        }
+        cashId = getMostPopularWordsListForTopicCashRepository.findByUserIdAndTopicId(
+            userId, topic.getId()
+        ).map(GetMostPopularWordsListForTopicCash::getId).orElse(null);
+        if (cashId != null) {
+            getMostPopularWordsListForTopicCashRepository.deleteById(cashId);
+        }
     }
 }

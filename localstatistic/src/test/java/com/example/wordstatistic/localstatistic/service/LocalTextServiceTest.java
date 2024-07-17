@@ -1,7 +1,11 @@
 package com.example.wordstatistic.localstatistic.service;
 
+import com.example.wordstatistic.localstatistic.dto.WordDTO;
 import com.example.wordstatistic.localstatistic.model.Text;
 import com.example.wordstatistic.localstatistic.model.Topic;
+import com.example.wordstatistic.localstatistic.model.redis.GetMostPopularWordsListForTextCash;
+import com.example.wordstatistic.localstatistic.model.redis.GetMostPopularWordsListForTopicCash;
+import com.example.wordstatistic.localstatistic.model.redis.GetMostPopularWordsListForUserCash;
 import com.example.wordstatistic.localstatistic.repository.TextRepository;
 import com.example.wordstatistic.localstatistic.repository.TopicRepository;
 import com.example.wordstatistic.localstatistic.repository.redis.GetMostPopularWordsListForTextCashRepository;
@@ -376,29 +380,40 @@ class LocalTextServiceTest {
         //GetMostPopularWordsListForUserCashRepository getMostPopularWordsListForUserCashRepository;
         //GetMostPopularWordsListForTopicCashRepository getMostPopularWordsListForTopicCashRepository;
         //GetMostPopularWordsListForTextCashRepository getMostPopularWordsListForTextCashRepository;
-        ArgumentCaptor<UUID> getMostPopularWordsListForUserCashUserIdCap = ArgumentCaptor.forClass(UUID.class);
-        ArgumentCaptor<Integer> getMostPopularWordsListForUserCashLimitCap = ArgumentCaptor.forClass(Integer.class);
-        doNothing().when(getMostPopularWordsListForUserCashRepository).deleteByUserIdAndLimitLessThan(
-            getMostPopularWordsListForUserCashUserIdCap.capture(),
-            getMostPopularWordsListForUserCashLimitCap.capture()
+        ArgumentCaptor<Long> getMostPopularWordsListForUserCashIdCap = ArgumentCaptor.forClass(Long.class);
+        doNothing().when(getMostPopularWordsListForUserCashRepository).deleteById(
+            getMostPopularWordsListForUserCashIdCap.capture()
         );
-        ArgumentCaptor<UUID> getMostPopularWordsListForTopicCashUserIdCap = ArgumentCaptor.forClass(UUID.class);
-        ArgumentCaptor<Integer> getMostPopularWordsListForTopicCashTopicIdCap = ArgumentCaptor.forClass(Integer.class);
-        ArgumentCaptor<Integer> getMostPopularWordsListForTopicCashLimitCap = ArgumentCaptor.forClass(Integer.class);
-        doNothing().when(getMostPopularWordsListForTopicCashRepository).deleteByUserIdAndTopicIdLimitLessThan(
-            getMostPopularWordsListForTopicCashUserIdCap.capture(),
-            getMostPopularWordsListForTopicCashTopicIdCap.capture(),
-            getMostPopularWordsListForTopicCashLimitCap.capture()
+        when(getMostPopularWordsListForUserCashRepository.findByUserId(user1)).thenReturn(
+            Optional.of(new GetMostPopularWordsListForUserCash(
+                1L,
+                3,
+                user1,
+                List.of(
+                    new WordDTO("a", 2),
+                    new WordDTO("b", 1),
+                    new WordDTO("c", 1)),
+                null
+            ))
         );
-        ArgumentCaptor<UUID> getMostPopularWordsListForTextCashUserIdCap = ArgumentCaptor.forClass(UUID.class);
-        ArgumentCaptor<Integer> getMostPopularWordsListForTextCashTopicIdCap = ArgumentCaptor.forClass(Integer.class);
-        ArgumentCaptor<Integer> getMostPopularWordsListForTextCashTextIdCap = ArgumentCaptor.forClass(Integer.class);
-        ArgumentCaptor<Integer> getMostPopularWordsListForTextCashLimitCap = ArgumentCaptor.forClass(Integer.class);
-        doNothing().when(getMostPopularWordsListForTextCashRepository).deleteByUserIdAndTopicIdAndTextIdAndLimitLessThan(
-            getMostPopularWordsListForTextCashUserIdCap.capture(),
-            getMostPopularWordsListForTextCashTopicIdCap.capture(),
-            getMostPopularWordsListForTextCashTextIdCap.capture(),
-            getMostPopularWordsListForTextCashLimitCap.capture()
+        ArgumentCaptor<Long> getMostPopularWordsListForTopicCashIdCap = ArgumentCaptor.forClass(Long.class);
+        doNothing().when(getMostPopularWordsListForTopicCashRepository).deleteById(
+            getMostPopularWordsListForTopicCashIdCap.capture()
+        );
+        when(getMostPopularWordsListForTopicCashRepository.findByUserIdAndTopicId(
+            user1, topicRepository.findByUserIdAndName(user1, "topic1").get().getId()
+        )).thenReturn(
+            Optional.of(new GetMostPopularWordsListForTopicCash(
+                2L,
+                3,
+                user1,
+                topicRepository.findByUserIdAndName(user1, "topic1").get().getId(),
+                List.of(
+                    new WordDTO("a", 2),
+                    new WordDTO("b", 1),
+                    new WordDTO("c", 1)),
+                null
+            ))
         );
 
         try {
@@ -421,67 +436,23 @@ class LocalTextServiceTest {
         assertEquals(
             "incorrect cash",
             1,
-            getMostPopularWordsListForUserCashUserIdCap.getAllValues().size()
+            getMostPopularWordsListForUserCashIdCap.getAllValues().size()
         );
         assertEquals(
             "incorrect cash",
-            user1,
-            getMostPopularWordsListForUserCashUserIdCap.getValue()
-        );
-        assertEquals(
-            "incorrect cash",
-            Integer.MAX_VALUE,
-            getMostPopularWordsListForUserCashLimitCap.getValue()
+            1L,
+            getMostPopularWordsListForUserCashIdCap.getValue()
         );
 
         assertEquals(
             "incorrect cash",
             1,
-            getMostPopularWordsListForTopicCashUserIdCap.getAllValues().size()
+            getMostPopularWordsListForTopicCashIdCap.getAllValues().size()
         );
         assertEquals(
             "incorrect cash",
-            user1,
-            getMostPopularWordsListForTopicCashUserIdCap.getValue()
-        );
-        assertEquals(
-            "incorrect cash",
-            topicRepository.findByUserIdAndName(user1, "topic1").get().getId(),
-            getMostPopularWordsListForTopicCashTopicIdCap.getValue()
-        );
-        assertEquals(
-            "incorrect cash",
-            Integer.MAX_VALUE,
-            getMostPopularWordsListForTopicCashLimitCap.getValue()
-        );
-
-        assertEquals(
-            "incorrect cash",
-            1,
-            getMostPopularWordsListForTextCashUserIdCap.getAllValues().size()
-        );
-        assertEquals(
-            "incorrect cash",
-            user1,
-            getMostPopularWordsListForTextCashUserIdCap.getValue()
-        );
-        assertEquals(
-            "incorrect cash",
-            topicRepository.findByUserIdAndName(user1, "topic1").get().getId(),
-            getMostPopularWordsListForTextCashTopicIdCap.getValue()
-        );
-        assertEquals(
-            "incorrect cash",
-            textRepository.findByTopicAndName(
-                topicRepository.findByUserIdAndName(user1, "topic1").get(),
-                "text113"
-            ).get().getId(),
-            getMostPopularWordsListForTextCashTextIdCap.getValue()
-        );
-        assertEquals(
-            "incorrect cash",
-            Integer.MAX_VALUE,
-            getMostPopularWordsListForTextCashLimitCap.getValue()
+            2L,
+            getMostPopularWordsListForTopicCashIdCap.getValue()
         );
     }
     @Test

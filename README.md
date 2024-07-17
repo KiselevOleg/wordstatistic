@@ -20,6 +20,69 @@ sudo docker build \
 
 sudo docker compose up -d
 
+# swagger
+
+http://globalstatistic.localhost:80/swagger-ui.html
+
+http://localstatistic.localhost:80/swagger-ui.html
+
+http://user.localhost:80/swagger-ui.html
+
+# database manager
+
+http://pdadmin.localhost:15432/
+
+docker-compose.yml contains all names and password
+
+examples
+
+traefik http authorization
+
+//haart test
+
+    - 'traefik.http.middlewares.admin-auth.basicauth.users=haart:$$2a$$12$$SUDmkLybXr3LQVCoHfmo4.bao6PIZe1R8vESkiCBAqbbNZ2jAdQkm'
+
+pgadmin-password
+
+        environment:
+            - PGADMIN_DEFAULT_EMAIL=haart@admin.com
+            - PGADMIN_DEFAULT_PASSWORD=test
+
+postgres-passwords
+
+        environment:
+            - POSTGRES_DB=user
+            - POSTGRES_USER=user
+            - POSTGRES_PASSWORD=password
+
+# kafka manager
+
+http://kafkaui.localhost:15432/
+
+docker-compose.yml contains all names and password
+
+examples
+
+traefik http authorization
+
+//haart test
+
+    - 'traefik.http.middlewares.admin-auth.basicauth.users=haart:$$2a$$12$$SUDmkLybXr3LQVCoHfmo4.bao6PIZe1R8vESkiCBAqbbNZ2jAdQkm'
+
+# redis manager
+
+http://rediscomander.localhost:15432/
+
+docker-compose.yml contains all names and password
+
+examples
+
+traefik http authorization
+
+//haart test
+
+    - 'traefik.http.middlewares.admin-auth.basicauth.users=haart:$$2a$$12$$SUDmkLybXr3LQVCoHfmo4.bao6PIZe1R8vESkiCBAqbbNZ2jAdQkm'
+
 # use
 
 curl -i globalstatistic.localhost:80/globalStatistic/getMostPopularWords?limit=3 && printf '\n'
