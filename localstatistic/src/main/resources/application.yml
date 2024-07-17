@@ -12,3 +12,8 @@ spring:
         show-sql: true
         properties.hibernate.dialect: org.hibernate.dialect.PostgreSQLDialect
         generate-ddl: true
+    data:
+        redis:
+            database: 0
+            host: localstatistic-redis
+            port: 6379
