@@ -83,6 +83,14 @@ services:
             - overlay
         volumes:
             - ./postgres_data/globalstatistic_data:/var/lib/postgresql/data
+    globalstatistic-redis:
+        image: redis:latest
+        container_name: globalstatistic-redis
+        restart: unless-stopped
+        environment:
+            - REDIS_REPLICATION_MODE=master
+        networks:
+            - overlay
 
     localstatistic:
         image: wordstatistic_localstatistic:1.0.0
@@ -106,22 +114,21 @@ services:
             - overlay
         volumes:
             - ./postgres_data/localstatistic_data:/var/lib/postgresql/data
-
-
-    test-redis:
+    localstatistic-redis:
         image: redis:latest
-        container_name: test-redis
+        container_name: localstatistic-redis
         restart: unless-stopped
         environment:
             - REDIS_REPLICATION_MODE=master
         networks:
             - overlay
+
     redis-commander:
         image: rediscommander/redis-commander:latest
         container_name: redis-commander
         restart: unless-stopped
         environment:
-            - REDIS_HOSTS=local:user-redis:6379, local:test-redis:6379
+            - REDIS_HOSTS=local:user-redis:6379, local:globalstatistic-redis:6379, local:localstatistic-redis:6379
         networks:
             - overlay
         labels:

@@ -10,6 +10,8 @@ import lombok.*;
 import org.hibernate.validator.constraints.Length;
 import org.springframework.validation.annotation.Validated;
 
+import java.io.Serializable;
+
 /**
  * @author Kiselev Oleg
  */
@@ -22,7 +24,7 @@ import org.springframework.validation.annotation.Validated;
 @Validated
 @Entity
 @Table(name = "word", schema = "public")
-public class Word {
+public class Word implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;

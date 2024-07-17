@@ -4,7 +4,9 @@
 package com.example.wordstatistic.globalstatistic.service;
 
 import com.example.wordstatistic.globalstatistic.model.Word;
+import com.example.wordstatistic.globalstatistic.model.redis.GetPopularListResultCash;
 import com.example.wordstatistic.globalstatistic.repository.WordRepository;
+import com.example.wordstatistic.globalstatistic.repository.redis.GetPopularListResultCashRepository;
 import com.example.wordstatistic.globalstatistic.util.WordStatisticStringAnalysis;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -23,10 +25,15 @@ import java.util.Optional;
 @Validated
 public class WordService {
     private final WordRepository wordRepository;
+    private final GetPopularListResultCashRepository getPopularListResultCashRepository;
 
     @Autowired
-    WordService(final WordRepository wordRepository) {
+    WordService(
+        final WordRepository wordRepository,
+        final GetPopularListResultCashRepository getPopularListResultCashRepository
+    ) {
         this.wordRepository = wordRepository;
+        this.getPopularListResultCashRepository = getPopularListResultCashRepository;
     }
 
     /**
@@ -35,7 +42,15 @@ public class WordService {
      * @return the list
      */
     public List<Word> getMostPopularWords(final @Min(1) Integer limit) {
-        return wordRepository.getMostUsedWords(limit);
+        return getPopularListResultCashRepository.findByLimit(limit)
+            .map(GetPopularListResultCash::getResult)
+            .orElseGet(() -> {
+                final List<Word> res = wordRepository.getMostUsedWords(limit);
+                getPopularListResultCashRepository.save(
+                    new GetPopularListResultCash(null, limit, res, null)
+                );
+                return res;
+            });
     }
 
     /**
