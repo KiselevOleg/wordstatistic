@@ -18,6 +18,10 @@ sudo docker build \
     --build-arg JAR_FILE="./build/libs/user-1.0.0.jar" \
     -t wordstatistic_user:1.0.0 ./user
 
+sudo docker build \
+    --build-arg JAR_FILE="./build/libs/usingHistory-1.0.0.jar" \
+    -t wordstatistic_usinghistory:1.0.0 ./usingHistory
+
 sudo docker compose up -d
 
 # swagger
@@ -153,6 +157,4 @@ sudo docker compose down
 
 sudo docker volume prune
 
-#sudo docker volume rm wordstatistic_pg_data
-
-sudo rm -fr ./postgres_data
+sudo rm -fr ./databases_data

@@ -48,7 +48,7 @@ services:
         networks:
             - overlay
         volumes:
-            - ./postgres_data/user_data:/var/lib/postgresql/data
+            - ./databases_data/user_data:/var/lib/postgresql/data
     user-redis:
         image: redis:latest
         container_name: user-redis
@@ -82,7 +82,7 @@ services:
         networks:
             - overlay
         volumes:
-            - ./postgres_data/globalstatistic_data:/var/lib/postgresql/data
+            - ./databases_data/globalstatistic_data:/var/lib/postgresql/data
     globalstatistic-redis:
         image: redis:latest
         container_name: globalstatistic-redis
@@ -113,7 +113,7 @@ services:
         networks:
             - overlay
         volumes:
-            - ./postgres_data/localstatistic_data:/var/lib/postgresql/data
+            - ./databases_data/localstatistic_data:/var/lib/postgresql/data
     localstatistic-redis:
         image: redis:latest
         container_name: localstatistic-redis
@@ -122,6 +122,36 @@ services:
             - REDIS_REPLICATION_MODE=master
         networks:
             - overlay
+
+    usinghistory:
+        image: wordstatistic_usinghistory:1.0.0
+        container_name: usinghistory
+        restart: unless-stopped
+        networks:
+            - overlay
+        labels:
+            - traefik.enable=true
+            - traefik.http.routers.user.rule=Host(`usingHistory.localhost`)
+            - traefik.http.routers.user.entrypoints=statistic
+    usinghistory-clickhouse:
+        image: clickhouse/clickhouse-server
+        container_name: usinghistory-clickhouse
+        restart: unless-stopped
+        environment:
+            - CLICKHOUSE_DB=usingHistory
+            - CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT=1
+            - CLICKHOUSE_USER=haart
+            - CLICKHOUSE_PASSWORD=test
+        networks:
+            - overlay
+        labels:
+            - traefik.enable=true
+            - traefik.http.routers.usingHistory_clickhouse.rule=Host(`usingHistoryClickhouse.localhost`)
+            - traefik.http.routers.usingHistory_clickhouse.entrypoints=admin
+            - traefik.http.routers.usingHistory_clickhouse.middlewares=admin-auth
+        volumes:
+            - ./databases_data/usingHistory-clickhoouse:/var/lib/clickhouse/
+            - ./databases_data/usingHistory-clickhoouse-logs:/var/log/clickhouse-server/
 
     redis-commander:
         image: rediscommander/redis-commander:latest
