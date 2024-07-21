@@ -32,7 +32,7 @@ http://localstatistic.localhost:80/swagger-ui.html
 
 http://user.localhost:80/swagger-ui.html
 
-# database manager
+# postgres manager
 
 http://pdadmin.localhost:15432/
 
@@ -86,6 +86,39 @@ traefik http authorization
 //haart test
 
     - 'traefik.http.middlewares.admin-auth.basicauth.users=haart:$$2a$$12$$SUDmkLybXr3LQVCoHfmo4.bao6PIZe1R8vESkiCBAqbbNZ2jAdQkm'
+
+# clickhouse manager
+
+http://usinghistoryclickhouse.localhost:15432/play
+
+view all tables
+
+    select table_name
+    from information_schema.tables
+    where table_type = 'BASE TABLE';
+
+interact with a table where usingHistory is a database name
+
+    select *
+    from usingHistory.table_name;
+
+docker-compose.yml contains all names and password
+
+examples
+
+traefik http authorization
+
+//haart test
+
+    - 'traefik.http.middlewares.admin-auth.basicauth.users=haart:$$2a$$12$$SUDmkLybXr3LQVCoHfmo4.bao6PIZe1R8vESkiCBAqbbNZ2jAdQkm'
+
+clickhouse password
+
+        environment:
+            - CLICKHOUSE_DB=usingHistory
+            - CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT=1
+            - CLICKHOUSE_USER=haart
+            - CLICKHOUSE_PASSWORD=test
 
 # use
 

@@ -29,10 +29,11 @@ dependencies {
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
-    implementation 'io.jsonwebtoken:jjwt-impl:0.12.3'
-    implementation 'io.jsonwebtoken:jjwt-api:0.12.3'
-    implementation 'io.jsonwebtoken:jjwt-jackson:0.12.3'
-    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+
+    implementation 'org.springframework.kafka:spring-kafka'
+    implementation 'com.clickhouse:clickhouse-jdbc:0.6.0:all'
+    implementation 'org.slf4j:slf4j-api:2.0.9'
 
     implementation 'com.github.spotbugs:spotbugs-annotations'
 
