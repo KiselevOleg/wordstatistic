@@ -3,6 +3,7 @@
  */
 package com.example.wordstatistic.user.service;
 
+import com.example.wordstatistic.user.client.UsingHistoryService;
 import com.example.wordstatistic.user.config.SecurityConfig;
 import com.example.wordstatistic.user.dto.TokenDTO;
 import com.example.wordstatistic.user.dto.UserDTO;
@@ -24,6 +25,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -37,6 +39,13 @@ public class UserService {
     public static final RestApiException INVALID_REFRESH_TOKEN =
         new RestApiException("invalid refresh token", HttpStatus.BAD_REQUEST);
 
+    private static final String USER_NAME_PARAMETER = "userName";
+    private static final String USER_ID_PARAMETER = "userId";
+    private static final String USER_PASSWORD_LENGTH_PARAMETER = "userPasswordLength";
+    private static final String SIGN_IN_STATUS_PARAMETER = "sinInStatus";
+    private static final String REFRESH_TOKEN_STATUS_PARAMETER = "refreshTokenStatus";
+    private final UsingHistoryService usingHistory;
+
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
 
@@ -48,6 +57,7 @@ public class UserService {
 
     @Autowired
     public UserService(
+        final UsingHistoryService usingHistory,
         final AuthenticationManager authenticationManager,
         final JwtTokenProvider jwtTokenProvider,
         final UserRepository userRepository,
@@ -55,6 +65,7 @@ public class UserService {
         final PermissionRepository permissionRepository,
         final UsedTokenRepository usedTokenRepository
     ) {
+        this.usingHistory = usingHistory;
         this.authenticationManager = authenticationManager;
         this.jwtTokenProvider = jwtTokenProvider;
         this.userRepository = userRepository;
@@ -70,6 +81,16 @@ public class UserService {
      */
     public void singUp(final UserDTO userDTO) throws RestApiException {
         if (userRepository.existsByName(userDTO.name())) {
+            usingHistory.sendMessage(
+                "singUp_userFoundException",
+                Map.of(
+                    USER_NAME_PARAMETER, userDTO.name(),
+                    USER_PASSWORD_LENGTH_PARAMETER, userDTO.password().length()
+                ),
+                Set.of(
+                    USER_NAME_PARAMETER
+                )
+            );
             throw USER_FOUND_EXCEPTION;
         }
 
@@ -79,13 +100,24 @@ public class UserService {
             return roleRepository.findByName(user).orElseThrow();
         });
 
+        final UUID userId = UUID.randomUUID();
         userRepository.save(
             new User(
                 null,
-                UUID.randomUUID(),
+                userId,
                 userDTO.name(),
                 SecurityConfig.passwordEncoder().encode(userDTO.password()),
                 role
+            )
+        );
+        usingHistory.sendMessage(
+            "singUp",
+            Map.of(
+                USER_NAME_PARAMETER, userDTO.name(),
+                USER_ID_PARAMETER, userId.toString()
+            ),
+            Set.of(
+                USER_NAME_PARAMETER
             )
         );
     }
@@ -96,6 +128,16 @@ public class UserService {
      * @throws Exception an exception if it can not be executed
      */
     public TokenDTO singIn(final UserDTO userDTO) {
+        usingHistory.sendMessage(
+            "singIn",
+            Map.of(
+                USER_NAME_PARAMETER, userDTO.name(),
+                SIGN_IN_STATUS_PARAMETER, "attempt"
+            ),
+            Set.of(
+                USER_NAME_PARAMETER
+            )
+        );
         final Authentication authentication =
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
             userDTO.name(),
@@ -105,6 +147,16 @@ public class UserService {
         final String accessToken = jwtTokenProvider.generateAccessToken(userDTO.name());
         final String refreshToken = jwtTokenProvider.generateRefreshToken(userDTO.name());
 
+        usingHistory.sendMessage(
+            "singIn",
+            Map.of(
+                USER_NAME_PARAMETER, userDTO.name(),
+                SIGN_IN_STATUS_PARAMETER, "success"
+            ),
+            Set.of(
+                USER_NAME_PARAMETER
+            )
+        );
         return new TokenDTO(accessToken, refreshToken);
     }
 
@@ -115,10 +167,41 @@ public class UserService {
      * @throws Exception an exception if it can not be executed
      */
     public TokenDTO refreshTokens(final TokenDTO tokenDTO) throws RestApiException {
+        final String refreshTokenTableName = "refreshToken";
+        usingHistory.sendMessage(
+            refreshTokenTableName,
+            Map.of(
+                USER_NAME_PARAMETER, REFRESH_TOKEN_STATUS_PARAMETER,
+                SIGN_IN_STATUS_PARAMETER, "attempt"
+            ),
+            Set.of(
+                USER_NAME_PARAMETER
+            )
+        );
         if (!jwtTokenProvider.validateRefreshToken(tokenDTO.refreshToken())) {
+            usingHistory.sendMessage(
+                refreshTokenTableName,
+                Map.of(
+                    USER_NAME_PARAMETER, REFRESH_TOKEN_STATUS_PARAMETER,
+                    SIGN_IN_STATUS_PARAMETER, "invalid_refresh_token"
+                ),
+                Set.of(
+                    USER_NAME_PARAMETER
+                )
+            );
             throw INVALID_REFRESH_TOKEN;
         }
         if (usedTokenRepository.existsByRefreshToken(tokenDTO.refreshToken())) {
+            usingHistory.sendMessage(
+                refreshTokenTableName,
+                Map.of(
+                    USER_NAME_PARAMETER, REFRESH_TOKEN_STATUS_PARAMETER,
+                    SIGN_IN_STATUS_PARAMETER, "refresh_token_already_used"
+                ),
+                Set.of(
+                    USER_NAME_PARAMETER
+                )
+            );
             throw INVALID_REFRESH_TOKEN;
         }
         usedTokenRepository.save(new UsedToken(null, tokenDTO.refreshToken(), null));
@@ -129,6 +212,17 @@ public class UserService {
 
         final String accessToken = jwtTokenProvider.generateAccessToken(user.getName());
         final String refreshToken = jwtTokenProvider.generateRefreshToken(user.getName());
+
+        usingHistory.sendMessage(
+            refreshTokenTableName,
+            Map.of(
+                USER_NAME_PARAMETER, REFRESH_TOKEN_STATUS_PARAMETER,
+                SIGN_IN_STATUS_PARAMETER, "success"
+            ),
+            Set.of(
+                USER_NAME_PARAMETER
+            )
+        );
 
         return new TokenDTO(accessToken, refreshToken);
     }

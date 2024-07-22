@@ -3,6 +3,7 @@
  */
 package com.example.wordstatistic.localstatistic.service;
 
+import com.example.wordstatistic.localstatistic.client.UsingHistoryService;
 import com.example.wordstatistic.localstatistic.model.Text;
 import com.example.wordstatistic.localstatistic.model.redis.GetMostPopularWordsListForTextCash;
 import com.example.wordstatistic.localstatistic.model.redis.GetMostPopularWordsListForTopicCash;
@@ -32,11 +33,21 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 @Service
 @Validated
+@SuppressWarnings("PMD.ClassFanOutComplexity")
 public class LocalStatisticService {
     public static final RestApiException TOPIC_NOT_FOUND_ERROR =
         new RestApiException("a topic is not found", HttpStatus.NOT_FOUND);
     public static final RestApiException TEXT_NOT_FOUND_ERROR =
         new RestApiException("a text is not found", HttpStatus.NOT_FOUND);
+
+    private static final String HISTORY_MESSAGE_LIMIT_PARAMETER = "limit";
+    private static final String HISTORY_MESSAGE_ACCEPTED_PARAMETER = "accepted";
+    private static final String HISTORY_MESSAGE_USER_ID_PARAMETER = "userId";
+    private static final String HISTORY_MESSAGE_TOPIC_ID_PARAMETER = "topicId";
+    private static final String HISTORY_MESSAGE_TOPIC_NAME_PARAMETER = "topicName";
+    private static final String HISTORY_MESSAGE_TEXT_ID_PARAMETER = "textId";
+    private static final String HISTORY_MESSAGE_TEXT_NAME_PARAMETER = "textName";
+    private final UsingHistoryService usingHistory;
 
     private final TextRepository textRepository;
     private final TopicRepository topicRepository;
@@ -47,12 +58,14 @@ public class LocalStatisticService {
 
     @Autowired
     public LocalStatisticService(
+        final UsingHistoryService usingHistory,
         final TextRepository textRepository,
         final TopicRepository topicRepository,
         final GetMostPopularWordsListForUserCashRepository getMostPopularWordsListForUserCashRepository,
         final GetMostPopularWordsListForTopicCashRepository getMostPopularWordsListForTopicCashRepository,
         final GetMostPopularWordsListForTextCashRepository getMostPopularWordsListForTextCashRepository
     ) {
+        this.usingHistory = usingHistory;
         this.textRepository = textRepository;
         this.topicRepository = topicRepository;
         this.getMostPopularWordsListForUserCashRepository = getMostPopularWordsListForUserCashRepository;
@@ -81,7 +94,7 @@ public class LocalStatisticService {
                 e.setResult(e.getResult().stream().limit(limit).toList());
                 return e.getResult();
             })
-            .orElseGet(() -> {
+            .or(() -> {
                 final Map<String, Integer> words = new HashMap<>();
                 topicRepository.findAllByUserId(userId).forEach((topic) ->
                     textRepository.findAllByTopic(topic)
@@ -102,8 +115,22 @@ public class LocalStatisticService {
                         null, limit, userId, list, null
                     )
                 );
-                return list;
-            });
+                return Optional.of(list);
+            })
+            .map((e) -> {
+                usingHistory.sendMessage(
+                    "getMostPopularWordsForUser",
+                    Map.of(
+                        HISTORY_MESSAGE_LIMIT_PARAMETER, limit,
+                        HISTORY_MESSAGE_ACCEPTED_PARAMETER, e.size(),
+                        HISTORY_MESSAGE_USER_ID_PARAMETER, userId.toString()
+                    ),
+                    Set.of(
+                        HISTORY_MESSAGE_LIMIT_PARAMETER
+                    )
+                );
+                return e;
+            }).orElseThrow();
     }
 
     /**
@@ -119,7 +146,20 @@ public class LocalStatisticService {
         final @NotBlank String topicName,
         final @Min(1) Integer limit) throws RestApiException {
         final Topic topic = topicRepository.findByUserIdAndName(userId, topicName)
-            .orElseThrow(() -> TOPIC_NOT_FOUND_ERROR);
+            .orElseThrow(() -> {
+                usingHistory.sendMessage(
+                    "getMostPopularWordsForTopic_topicNotFoundError",
+                    Map.of(
+                        HISTORY_MESSAGE_LIMIT_PARAMETER, limit,
+                        HISTORY_MESSAGE_USER_ID_PARAMETER, userId.toString(),
+                        HISTORY_MESSAGE_TOPIC_NAME_PARAMETER, topicName
+                    ),
+                    Set.of(
+                        HISTORY_MESSAGE_TOPIC_NAME_PARAMETER
+                    )
+                );
+                return TOPIC_NOT_FOUND_ERROR;
+            });
         final AtomicReference<Optional<Long>> cashId = new AtomicReference<>(Optional.empty());
         return getMostPopularWordsListForTopicCashRepository
             .findByUserIdAndTopicId(userId, topic.getId())
@@ -132,7 +172,7 @@ public class LocalStatisticService {
                 e.setResult(e.getResult().stream().limit(limit).toList());
                 return e.getResult();
             })
-            .orElseGet(() -> {
+            .or(() -> {
                 final Map<String, Integer> words = new HashMap<>();
                 textRepository.findAllByTopic(topic)
                     .forEach((e) -> WordStatisticStringAnalysis.getAllWords(words, e.getText()));
@@ -152,8 +192,24 @@ public class LocalStatisticService {
                         null, limit, userId, topic.getId(), list, null
                     )
                 );
-                return list;
-            });
+                return Optional.of(list);
+            })
+            .map((e) -> {
+                usingHistory.sendMessage(
+                    "getMostPopularWordsForTopic",
+                    Map.of(
+                        HISTORY_MESSAGE_LIMIT_PARAMETER, limit,
+                        HISTORY_MESSAGE_ACCEPTED_PARAMETER, e.size(),
+                        HISTORY_MESSAGE_USER_ID_PARAMETER, userId.toString(),
+                        HISTORY_MESSAGE_TOPIC_ID_PARAMETER, topic.getId(),
+                        HISTORY_MESSAGE_TOPIC_NAME_PARAMETER, topic.getName()
+                    ),
+                    Set.of(
+                        HISTORY_MESSAGE_LIMIT_PARAMETER
+                    )
+                );
+                return e;
+            }).orElseThrow();
     }
 
     /**
@@ -171,9 +227,38 @@ public class LocalStatisticService {
         final @NotBlank String textName,
         final @Min(1) Integer limit) throws RestApiException {
         final Topic topic = topicRepository.findByUserIdAndName(userId, topicName)
-            .orElseThrow(() -> TOPIC_NOT_FOUND_ERROR);
+            .orElseThrow(() -> {
+                usingHistory.sendMessage(
+                    "getMostPopularWordsForText_TopicNotFoundError",
+                    Map.of(
+                        HISTORY_MESSAGE_LIMIT_PARAMETER, limit,
+                        HISTORY_MESSAGE_USER_ID_PARAMETER, userId.toString(),
+                        HISTORY_MESSAGE_TOPIC_NAME_PARAMETER, topicName,
+                        HISTORY_MESSAGE_TEXT_NAME_PARAMETER, textName
+                    ),
+                    Set.of(
+                        HISTORY_MESSAGE_TOPIC_NAME_PARAMETER, HISTORY_MESSAGE_TEXT_NAME_PARAMETER
+                    )
+                );
+                return TOPIC_NOT_FOUND_ERROR;
+            });
         final Text text = textRepository.findByTopicAndName(topic, textName)
-            .orElseThrow(() -> TEXT_NOT_FOUND_ERROR);
+            .orElseThrow(() -> {
+                usingHistory.sendMessage(
+                    "getMostPopularWordsForText_TextNotFoundError",
+                    Map.of(
+                        HISTORY_MESSAGE_LIMIT_PARAMETER, limit,
+                        HISTORY_MESSAGE_USER_ID_PARAMETER, userId.toString(),
+                        HISTORY_MESSAGE_TOPIC_NAME_PARAMETER, topic.getName(),
+                        HISTORY_MESSAGE_TOPIC_ID_PARAMETER, topic.getId(),
+                        HISTORY_MESSAGE_TEXT_NAME_PARAMETER, textName
+                    ),
+                    Set.of(
+                        HISTORY_MESSAGE_TOPIC_NAME_PARAMETER, HISTORY_MESSAGE_TEXT_NAME_PARAMETER
+                    )
+                );
+                return TEXT_NOT_FOUND_ERROR;
+            });
         final AtomicReference<Optional<Long>> cashId = new AtomicReference<>(Optional.empty());
         return getMostPopularWordsListForTextCashRepository
             .findByUserIdAndTopicIdAndTextId(userId, topic.getId(), text.getId())
@@ -186,7 +271,7 @@ public class LocalStatisticService {
                 e.setResult(e.getResult().stream().limit(limit).toList());
                 return e.getResult();
             })
-            .orElseGet(() -> {
+            .or(() -> {
                 final Map<String, Integer> words = WordStatisticStringAnalysis.getAllWords(text.getText());
 
                 List<WordDTO> list = words.entrySet()
@@ -204,7 +289,25 @@ public class LocalStatisticService {
                         null, limit, userId, topic.getId(), text.getId(), list, null
                     )
                 );
-                return list;
-            });
+                return Optional.of(list);
+            })
+            .map((e) -> {
+                usingHistory.sendMessage(
+                    "getMostPopularWordsForText",
+                    Map.of(
+                        HISTORY_MESSAGE_LIMIT_PARAMETER, limit,
+                        HISTORY_MESSAGE_ACCEPTED_PARAMETER, e.size(),
+                        HISTORY_MESSAGE_USER_ID_PARAMETER, userId.toString(),
+                        HISTORY_MESSAGE_TOPIC_ID_PARAMETER, topic.getId(),
+                        HISTORY_MESSAGE_TOPIC_NAME_PARAMETER, topic.getName(),
+                        HISTORY_MESSAGE_TEXT_ID_PARAMETER, text.getId(),
+                        HISTORY_MESSAGE_TEXT_NAME_PARAMETER, text.getName()
+                    ),
+                    Set.of(
+                        HISTORY_MESSAGE_LIMIT_PARAMETER
+                    )
+                );
+                return e;
+            }).orElseThrow();
     }
 }
