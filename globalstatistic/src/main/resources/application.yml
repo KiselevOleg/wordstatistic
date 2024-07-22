@@ -6,6 +6,8 @@ spring:
         username: globalstatistic
         password: password
     kafka:
+        bootstrap-servers: kafka:9092
+        client-id: globalstatistic-producer
         consumer:
             bootstrap-servers: kafka:9092
             group-id: globalstatistic-group

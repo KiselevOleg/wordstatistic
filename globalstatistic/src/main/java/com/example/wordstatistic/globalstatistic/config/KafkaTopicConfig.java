@@ -1,7 +1,7 @@
 /**
  * Copyright 2024 Kiselev Oleg
  */
-package com.example.wordstatistic.localstatistic.config;
+package com.example.wordstatistic.globalstatistic.config;
 
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.clients.admin.NewTopic;
@@ -26,10 +26,6 @@ public class KafkaTopicConfig {
         return new KafkaAdmin(configs);
     }
 
-    @Bean
-    public NewTopic text() {
-        return new NewTopic("text", 1, (short) 1);
-    }
     @Bean
     public NewTopic usingHistory() {
         return new NewTopic("usingHistory", 1, (short) 1);

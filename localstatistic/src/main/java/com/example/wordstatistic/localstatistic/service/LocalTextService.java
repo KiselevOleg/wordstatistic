@@ -3,6 +3,7 @@
  */
 package com.example.wordstatistic.localstatistic.service;
 
+import com.example.wordstatistic.localstatistic.client.UsingHistoryService;
 import com.example.wordstatistic.localstatistic.model.Text;
 import com.example.wordstatistic.localstatistic.model.Topic;
 import com.example.wordstatistic.localstatistic.model.redis.GetMostPopularWordsListForTopicCash;
@@ -21,9 +22,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * @author Kiselev Oleg
@@ -40,6 +39,18 @@ public class LocalTextService {
     public static final RestApiException TOPIC_OR_TEXT_NAME_NOT_FOUND_ERROR =
         new RestApiException("a topic or a text name is not found", HttpStatus.NOT_FOUND);
 
+    private static final String HISTORY_MESSAGE_ACCEPTED_PARAMETER = "accepted";
+    private static final String HISTORY_MESSAGE_USER_ID_PARAMETER = "user_id";
+    private static final String HISTORY_MESSAGE_USER_NAME_PARAMETER = "user_name";
+    private static final String HISTORY_MESSAGE_TOPIC_ID_PARAMETER = "topic_id";
+    private static final String HISTORY_MESSAGE_TOPIC_NAME_PARAMETER = "topic_name";
+    private static final String HISTORY_MESSAGE_TOPIC_NAME_LENGTH_PARAMETER = "topic_name_length";
+    private static final String HISTORY_MESSAGE_TEXT_NAME_PARAMETER = "text_name";
+    private static final String HISTORY_MESSAGE_TEXT_NAME_LENGTH_PARAMETER = "text_name_length";
+    private static final String HISTORY_MESSAGE_TEXT_ID_PARAMETER = "text_id";
+    private static final String HISTORY_MESSAGE_TEXT_LENGTH_PARAMETER = "text_length";
+    private final UsingHistoryService usingHistory;
+
     private final TextRepository textRepository;
     private final TopicRepository topicRepository;
 
@@ -51,6 +62,7 @@ public class LocalTextService {
 
     @Autowired
     LocalTextService(
+        final UsingHistoryService usingHistory,
         final TextRepository textRepository,
         final TopicRepository topicRepository,
         final KafkaTemplate<String, String> kafkaTemplate,
@@ -58,6 +70,7 @@ public class LocalTextService {
         final GetMostPopularWordsListForTopicCashRepository getMostPopularWordsListForTopicCashRepository,
         final GetMostPopularWordsListForTextCashRepository getMostPopularWordsListForTextCashRepository
     ) {
+        this.usingHistory = usingHistory;
         this.textRepository = textRepository;
         this.topicRepository = topicRepository;
         this.kafkaTemplate = kafkaTemplate;
@@ -72,7 +85,18 @@ public class LocalTextService {
      * @return a list of topics
      */
     public List<Topic> getAllTopicForUser(final @NotNull UUID userId) {
-        return topicRepository.findAllByUserId(userId);
+        final List<Topic> res = topicRepository.findAllByUserId(userId);
+        usingHistory.sendMessage(
+            "getAllTopicForUser",
+            Map.of(
+                HISTORY_MESSAGE_ACCEPTED_PARAMETER, res.size(),
+                HISTORY_MESSAGE_USER_ID_PARAMETER, userId.toString()
+            ),
+            Set.of(
+                HISTORY_MESSAGE_ACCEPTED_PARAMETER
+            )
+        );
+        return res;
     }
 
     /**
@@ -86,8 +110,33 @@ public class LocalTextService {
         final @NotBlank String topicName
     ) throws RestApiException {
         final Topic topic = topicRepository.findByUserIdAndName(userId, topicName)
-            .orElseThrow(() -> TOPIC_NOT_FOUND_ERROR);
-        return textRepository.findAllByTopic(topic);
+            .orElseThrow(() -> {
+                usingHistory.sendMessage(
+                    "getAllTextsForSelectedTopic_topicNotFoundError",
+                    Map.of(
+                        HISTORY_MESSAGE_USER_ID_PARAMETER, userId.toString(),
+                        HISTORY_MESSAGE_TOPIC_NAME_PARAMETER, topicName
+                    ),
+                    Set.of(
+                        HISTORY_MESSAGE_TOPIC_NAME_PARAMETER
+                    )
+                );
+                return TOPIC_NOT_FOUND_ERROR;
+            });
+        final List<Text> res = textRepository.findAllByTopic(topic);
+        usingHistory.sendMessage(
+            "getAllTextsForSelectedTopic",
+            Map.of(
+                HISTORY_MESSAGE_ACCEPTED_PARAMETER, res.size(),
+                HISTORY_MESSAGE_USER_ID_PARAMETER, userId.toString(),
+                HISTORY_MESSAGE_TOPIC_ID_PARAMETER, topic.getId(),
+                HISTORY_MESSAGE_TOPIC_NAME_PARAMETER, topic.getName()
+            ),
+            Set.of(
+                HISTORY_MESSAGE_ACCEPTED_PARAMETER
+            )
+        );
+        return res;
     }
 
     /**
@@ -103,8 +152,38 @@ public class LocalTextService {
         final @NotBlank String textName
     ) throws RestApiException {
         final Topic topic = topicRepository.findByUserIdAndName(userId, topicName)
-            .orElseThrow(() -> TOPIC_OR_TEXT_NAME_NOT_FOUND_ERROR);
-        return textRepository.findByTopicAndName(topic, textName);
+            .orElseThrow(() -> {
+                usingHistory.sendMessage(
+                    "getTextForSelectedTextName_topicOrTextNotFoundError",
+                    Map.of(
+                        HISTORY_MESSAGE_USER_ID_PARAMETER, userId.toString(),
+                        HISTORY_MESSAGE_TOPIC_NAME_PARAMETER, topicName,
+                        HISTORY_MESSAGE_TEXT_NAME_PARAMETER, textName
+                    ),
+                    Set.of(
+                        HISTORY_MESSAGE_TOPIC_NAME_PARAMETER,
+                        HISTORY_MESSAGE_TEXT_NAME_PARAMETER
+                    )
+                );
+                return TOPIC_OR_TEXT_NAME_NOT_FOUND_ERROR;
+            });
+        final Optional<Text> res = textRepository.findByTopicAndName(topic, textName);
+        usingHistory.sendMessage(
+            "getTextForSelectedTextName",
+            Map.of(
+                HISTORY_MESSAGE_ACCEPTED_PARAMETER, res.map((e) -> "true").orElse("false"),
+                HISTORY_MESSAGE_USER_ID_PARAMETER, userId.toString(),
+                HISTORY_MESSAGE_TOPIC_ID_PARAMETER, topic.getId(),
+                HISTORY_MESSAGE_TOPIC_NAME_PARAMETER, topic.getName(),
+                HISTORY_MESSAGE_TEXT_NAME_PARAMETER, textName,
+                HISTORY_MESSAGE_TEXT_ID_PARAMETER, (res.map(Text::getId).orElse(-1)),
+                HISTORY_MESSAGE_TEXT_LENGTH_PARAMETER, (res.map(text -> text.getText().length()).orElse(-1))
+            ),
+            Set.of(
+                HISTORY_MESSAGE_ACCEPTED_PARAMETER
+            )
+        );
+        return res;
     }
 
     /**
@@ -119,9 +198,32 @@ public class LocalTextService {
         final @NotBlank String topicName
     ) throws RestApiException {
         if (topicRepository.findByUserIdAndName(userId, topicName).isPresent()) {
+            usingHistory.sendMessage(
+                "addTopic_topicFoundError",
+                Map.of(
+                    HISTORY_MESSAGE_USER_ID_PARAMETER, userId.toString(),
+                    HISTORY_MESSAGE_USER_NAME_PARAMETER, userName,
+                    HISTORY_MESSAGE_TOPIC_NAME_PARAMETER, topicName,
+                    HISTORY_MESSAGE_TOPIC_NAME_LENGTH_PARAMETER, topicName.length()
+                ),
+                Set.of(
+                    HISTORY_MESSAGE_TOPIC_NAME_PARAMETER
+                )
+            );
             throw TOPIC_FOUND_ERROR;
         }
-
+        usingHistory.sendMessage(
+            "addTopic",
+            Map.of(
+                HISTORY_MESSAGE_USER_ID_PARAMETER, userId.toString(),
+                HISTORY_MESSAGE_USER_NAME_PARAMETER, userName,
+                HISTORY_MESSAGE_TOPIC_NAME_PARAMETER, topicName,
+                HISTORY_MESSAGE_TOPIC_NAME_LENGTH_PARAMETER, topicName.length()
+            ),
+            Set.of(
+                HISTORY_MESSAGE_TOPIC_NAME_PARAMETER
+            )
+        );
         topicRepository.save(new Topic(null, userId, userName, topicName));
     }
 
@@ -138,13 +240,55 @@ public class LocalTextService {
         final @NotBlank String text
     ) throws RestApiException {
         final Topic topic = topicRepository.findByUserIdAndName(userId, topicName)
-            .orElseThrow(() -> TOPIC_NOT_FOUND_ERROR);
+            .orElseThrow(() -> {
+                usingHistory.sendMessage(
+                    "addText_topicNotFoundError",
+                    Map.of(
+                        HISTORY_MESSAGE_USER_ID_PARAMETER, userId.toString(),
+                        HISTORY_MESSAGE_TOPIC_NAME_PARAMETER, topicName,
+                        HISTORY_MESSAGE_TOPIC_NAME_LENGTH_PARAMETER, topicName.length(),
+                        HISTORY_MESSAGE_TEXT_NAME_PARAMETER, textName,
+                        HISTORY_MESSAGE_TEXT_NAME_LENGTH_PARAMETER, textName.length()
+                    ),
+                    Set.of(
+                        HISTORY_MESSAGE_TOPIC_NAME_PARAMETER
+                    )
+                );
+                return TOPIC_NOT_FOUND_ERROR;
+            });
         if (textRepository.findByTopicAndName(topic, textName).isPresent()) {
+            usingHistory.sendMessage(
+                "addText_topicExistsError",
+                Map.of(
+                    HISTORY_MESSAGE_USER_ID_PARAMETER, userId.toString(),
+                    HISTORY_MESSAGE_TOPIC_NAME_PARAMETER, topicName,
+                    HISTORY_MESSAGE_TOPIC_NAME_LENGTH_PARAMETER, topicName.length(),
+                    HISTORY_MESSAGE_TEXT_NAME_PARAMETER, textName,
+                    HISTORY_MESSAGE_TEXT_NAME_LENGTH_PARAMETER, textName.length()
+                ),
+                Set.of(
+                    HISTORY_MESSAGE_TOPIC_NAME_PARAMETER
+                )
+            );
             throw TEXT_EXISTS_ERROR;
         }
 
         textRepository.save(new Text(null, topic, textName, text));
         kafkaTemplate.send("text", text);
+
+        usingHistory.sendMessage(
+            "addText",
+            Map.of(
+                HISTORY_MESSAGE_USER_ID_PARAMETER, userId.toString(),
+                HISTORY_MESSAGE_TOPIC_NAME_PARAMETER, topicName,
+                HISTORY_MESSAGE_TOPIC_NAME_LENGTH_PARAMETER, topicName.length(),
+                HISTORY_MESSAGE_TEXT_NAME_PARAMETER, textName,
+                HISTORY_MESSAGE_TEXT_NAME_LENGTH_PARAMETER, textName.length()
+            ),
+            Set.of(
+                HISTORY_MESSAGE_TOPIC_NAME_PARAMETER
+            )
+        );
 
         Long cashId;
         cashId = getMostPopularWordsListForUserCashRepository.findByUserId(

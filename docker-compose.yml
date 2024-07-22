@@ -129,10 +129,6 @@ services:
         restart: unless-stopped
         networks:
             - overlay
-        labels:
-            - traefik.enable=true
-            - traefik.http.routers.user.rule=Host(`usingHistory.localhost`)
-            - traefik.http.routers.user.entrypoints=statistic
     usinghistory-clickhouse:
         image: clickhouse/clickhouse-server
         container_name: usinghistory-clickhouse
