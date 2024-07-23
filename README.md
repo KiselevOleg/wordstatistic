@@ -18,7 +18,96 @@ sudo docker build \
     --build-arg JAR_FILE="./build/libs/user-1.0.0.jar" \
     -t wordstatistic_user:1.0.0 ./user
 
+sudo docker build \
+    --build-arg JAR_FILE="./build/libs/usingHistory-1.0.0.jar" \
+    -t wordstatistic_usinghistory:1.0.0 ./usingHistory
+
 sudo docker compose up -d
+
+# description
+
+Backend for analysis count of words in texts. It supports only the Latin alphabet.
+
+### globalstatistic
+a service for collect all word that ware added to any source. It generates statistic for everyine.
+
+Also it can get a new text from a user with a corresponding permission directly for update statistic.
+
+### localstatistic
+A service for create and store texts are storage by topics for analysis word count for a specified text or topic or user.
+
+It sends added texts in a globalstatistic service for a global statistic.
+
+### user
+A service for singing in, singing up for users and storage their roles and permissions.
+
+It generates and refresh access and refresh tokens.
+
+### usingHistory
+A service for collecting all using information from all services.
+It receives json messages to create a table based on it if the table does not exist and add information in it.
+
+example
+
+    curl -X 'POST' \
+        'http://localstatistic.localhost/topicsAndTexts/addNewText' \
+        -H 'accept: application/json' \
+        -H 'Authorization: Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiI2MWI5NTlkZS0xN2Y2LTQwYTUtODU1Yi05OTBhODFiODVjNjQiLCJpYXQiOjE3MjE3MjQyMjUsImV4cCI6MTcyMTcyNDgyNSwidXNlcm5hbWUiOiJ0ZXN0VXNlciIsInBlcm1pc3Npb25zIjpbInZpZXdUZXh0IiwiZWRpdFRleHQiXX0.m44m4FKEIMk-2TThJFlXE3JUzV0KhPqI-wLnNrejLZY2PovYFSlBkqNwLWScYgPa' \
+        -H 'Content-Type: application/json' \
+        -d '{
+        "topic": "testTopic",
+        "name": "testTextName",
+        "text": "a test text"
+        }'
+
+by java code
+
+    usingHistory.sendMessage(
+            "addText",
+            Map.of(
+                HISTORY_MESSAGE_USER_ID_PARAMETER, userId.toString(),
+                HISTORY_MESSAGE_TOPIC_NAME_PARAMETER, topicName,
+                HISTORY_MESSAGE_TOPIC_NAME_LENGTH_PARAMETER, topicName.length(),
+                HISTORY_MESSAGE_TEXT_NAME_PARAMETER, textName,
+                HISTORY_MESSAGE_TEXT_NAME_LENGTH_PARAMETER, textName.length()
+            ),
+            Set.of(
+                HISTORY_MESSAGE_TOPIC_NAME_PARAMETER
+            )
+        );
+
+leads to a json
+
+    {
+	    "serviceName": "localStatistic",
+	    "historyTableName": "addText",
+	    "created": 1721724290356,
+	    "shortData": {},
+	    "integerData": {
+		    "text_name_length": 12,
+		    "topic_name_length": 9
+	    },
+	    "longData": {},
+	    "floatData": {},
+	    "doubleData": {},
+	    "stringData": {
+		    "user_id": "61b959de-17f6-40a5-855b-990a81b85c64",
+		    "topic_name": "testTopic",
+		    "text_name": "testTextName"
+	    },
+	    "dateData": {},
+	    "primaryKey": [
+		    "topic_name"
+	    ]
+    }
+
+leads to creating a table
+
+    select * from usingHistory.localStatistic_addText
+
+| text_name_length | topic_name_length | user_id | topic_name | text_name    | record_created |
+| :---: | :---: | :---: | :---: | :---: | :---: |
+| 12 | 9 | 61b959de-17f6-40a5-855b-990a81b85c64 | testTopic | testTextName | 2024-07-23 08:44:50 |
 
 # swagger
 
@@ -28,7 +117,7 @@ http://localstatistic.localhost:80/swagger-ui.html
 
 http://user.localhost:80/swagger-ui.html
 
-# database manager
+# postgres manager
 
 http://pdadmin.localhost:15432/
 
@@ -82,6 +171,39 @@ traefik http authorization
 //haart test
 
     - 'traefik.http.middlewares.admin-auth.basicauth.users=haart:$$2a$$12$$SUDmkLybXr3LQVCoHfmo4.bao6PIZe1R8vESkiCBAqbbNZ2jAdQkm'
+
+# clickhouse manager
+
+http://usinghistoryclickhouse.localhost:15432/play
+
+view all tables
+
+    select table_name
+    from information_schema.tables
+    where table_type = 'BASE TABLE';
+
+interact with a table where usingHistory is a database name
+
+    select *
+    from usingHistory.table_name;
+
+docker-compose.yml contains all names and password
+
+examples
+
+traefik http authorization
+
+//haart test
+
+    - 'traefik.http.middlewares.admin-auth.basicauth.users=haart:$$2a$$12$$SUDmkLybXr3LQVCoHfmo4.bao6PIZe1R8vESkiCBAqbbNZ2jAdQkm'
+
+clickhouse password
+
+        environment:
+            - CLICKHOUSE_DB=usingHistory
+            - CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT=1
+            - CLICKHOUSE_USER=haart
+            - CLICKHOUSE_PASSWORD=test
 
 # use
 
@@ -153,6 +275,4 @@ sudo docker compose down
 
 sudo docker volume prune
 
-#sudo docker volume rm wordstatistic_pg_data
-
-sudo rm -fr ./postgres_data
+sudo rm -fr ./databases_data

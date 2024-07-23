@@ -1,5 +1,6 @@
 package com.example.wordstatistic.localstatistic.service;
 
+import com.example.wordstatistic.localstatistic.client.UsingHistoryService;
 import com.example.wordstatistic.localstatistic.dto.WordDTO;
 import com.example.wordstatistic.localstatistic.model.Text;
 import com.example.wordstatistic.localstatistic.model.Topic;
@@ -21,10 +22,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -36,6 +34,9 @@ class LocalStatisticServiceTest {
     private final TextRepository textRepository;
     private final TopicRepository topicRepository;
     private final LocalStatisticService localStatisticService;
+
+    @MockBean
+    private final UsingHistoryService usingHistory;
 
     @MockBean
     private final GetMostPopularWordsListForUserCashRepository getMostPopularWordsListForUserCashRepository;
@@ -68,6 +69,7 @@ class LocalStatisticServiceTest {
         final TextRepository textRepository,
         final TopicRepository topicRepository,
         final LocalStatisticService localStatisticService,
+        final UsingHistoryService usingHistory,
         final GetMostPopularWordsListForUserCashRepository getMostPopularWordsListForUserCashRepository,
         final GetMostPopularWordsListForTopicCashRepository getMostPopularWordsListForTopicCashRepository,
         final GetMostPopularWordsListForTextCashRepository getMostPopularWordsListForTextCashRepository
@@ -75,6 +77,7 @@ class LocalStatisticServiceTest {
         this.textRepository = textRepository;
         this.topicRepository = topicRepository;
         this.localStatisticService = localStatisticService;
+        this.usingHistory = usingHistory;
         this.getMostPopularWordsListForUserCashRepository = getMostPopularWordsListForUserCashRepository;
         this.getMostPopularWordsListForTopicCashRepository = getMostPopularWordsListForTopicCashRepository;
         this.getMostPopularWordsListForTextCashRepository = getMostPopularWordsListForTextCashRepository;
@@ -220,6 +223,15 @@ class LocalStatisticServiceTest {
                 return null;
             });
 
+        ArgumentCaptor<String> usingHistoryOperationNameCap = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<Map<String, Object>> usingHistoryParametersCap = ArgumentCaptor.forClass(Map.class);
+        ArgumentCaptor<Set<String>> usingHistoryPrimaryKeyCap = ArgumentCaptor.forClass(Set.class);
+        doNothing().when(usingHistory).sendMessage(
+            usingHistoryOperationNameCap.capture(),
+            usingHistoryParametersCap.capture(),
+            usingHistoryPrimaryKeyCap.capture()
+        );
+
         List<WordDTO> res = localStatisticService.getMostPopularWordsForUser(user1, 2);
 
         assertEquals("incorrect statistic", 2, res.size());
@@ -289,6 +301,38 @@ class LocalStatisticServiceTest {
             0,
             getMostPopularWordsListForTextCashDeleteIdCap.getAllValues().size()
         );
+
+        assertEquals(
+            "incorrect history message",
+            1,
+            usingHistoryOperationNameCap.getAllValues().size()
+        );
+        assertEquals(
+            "incorrect history message",
+            "getMostPopularWordsForUser",
+            usingHistoryOperationNameCap.getValue()
+        );
+        assertEquals(
+            "incorrect history message",
+            Map.of(
+                "accepted", 2,
+                "limit", 2,
+                "userId", usingHistoryParametersCap.getValue().get("userId")
+            ),
+            usingHistoryParametersCap.getValue()
+        );
+        assertEquals(
+            "incorrect history message",
+            user1,
+            UUID.fromString((String) usingHistoryParametersCap.getValue().get("userId"))
+        );
+        assertEquals(
+            "incorrect history message",
+            Set.of(
+                "limit"
+            ),
+            usingHistoryPrimaryKeyCap.getValue()
+        );
     }
     @Test
     public void getMostPopularWordsForUserTest2() {
@@ -319,6 +363,15 @@ class LocalStatisticServiceTest {
                 callMethods.add(saveMethod);
                 return null;
             });
+
+        ArgumentCaptor<String> usingHistoryOperationNameCap = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<Map<String, Object>> usingHistoryParametersCap = ArgumentCaptor.forClass(Map.class);
+        ArgumentCaptor<Set<String>> usingHistoryPrimaryKeyCap = ArgumentCaptor.forClass(Set.class);
+        doNothing().when(usingHistory).sendMessage(
+            usingHistoryOperationNameCap.capture(),
+            usingHistoryParametersCap.capture(),
+            usingHistoryPrimaryKeyCap.capture()
+        );
 
         List<WordDTO> res = localStatisticService.getMostPopularWordsForUser(user1, 2);
 
@@ -395,6 +448,38 @@ class LocalStatisticServiceTest {
             0,
             getMostPopularWordsListForTextCashDeleteIdCap.getAllValues().size()
         );
+
+        assertEquals(
+            "incorrect history message",
+            1,
+            usingHistoryOperationNameCap.getAllValues().size()
+        );
+        assertEquals(
+            "incorrect history message",
+            "getMostPopularWordsForUser",
+            usingHistoryOperationNameCap.getValue()
+        );
+        assertEquals(
+            "incorrect history message",
+            Map.of(
+                "accepted", 2,
+                "limit", 2,
+                "userId", usingHistoryParametersCap.getValue().get("userId")
+            ),
+            usingHistoryParametersCap.getValue()
+        );
+        assertEquals(
+            "incorrect history message",
+            user1,
+            UUID.fromString((String) usingHistoryParametersCap.getValue().get("userId"))
+        );
+        assertEquals(
+            "incorrect history message",
+            Set.of(
+                "limit"
+            ),
+            usingHistoryPrimaryKeyCap.getValue()
+        );
     }
     @Test
     public void getMostPopularWordsForUserTest3() {
@@ -427,6 +512,15 @@ class LocalStatisticServiceTest {
                 callMethods.add(saveMethod);
                 return null;
             });
+
+        ArgumentCaptor<String> usingHistoryOperationNameCap = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<Map<String, Object>> usingHistoryParametersCap = ArgumentCaptor.forClass(Map.class);
+        ArgumentCaptor<Set<String>> usingHistoryPrimaryKeyCap = ArgumentCaptor.forClass(Set.class);
+        doNothing().when(usingHistory).sendMessage(
+            usingHistoryOperationNameCap.capture(),
+            usingHistoryParametersCap.capture(),
+            usingHistoryPrimaryKeyCap.capture()
+        );
 
         List<WordDTO> res = localStatisticService.getMostPopularWordsForUser(user1, 2);
 
@@ -490,9 +584,50 @@ class LocalStatisticServiceTest {
             0,
             getMostPopularWordsListForTextCashDeleteIdCap.getAllValues().size()
         );
+
+        assertEquals(
+            "incorrect history message",
+            1,
+            usingHistoryOperationNameCap.getAllValues().size()
+        );
+        assertEquals(
+            "incorrect history message",
+            "getMostPopularWordsForUser",
+            usingHistoryOperationNameCap.getValue()
+        );
+        assertEquals(
+            "incorrect history message",
+            Map.of(
+                "accepted", 2,
+                "limit", 2,
+                "userId", usingHistoryParametersCap.getValue().get("userId")
+            ),
+            usingHistoryParametersCap.getValue()
+        );
+        assertEquals(
+            "incorrect history message",
+            user1,
+            UUID.fromString((String) usingHistoryParametersCap.getValue().get("userId"))
+        );
+        assertEquals(
+            "incorrect history message",
+            Set.of(
+                "limit"
+            ),
+            usingHistoryPrimaryKeyCap.getValue()
+        );
     }
     @Test
     public void getMostPopularWordsForUserTest4() {
+        ArgumentCaptor<String> usingHistoryOperationNameCap = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<Map<String, Object>> usingHistoryParametersCap = ArgumentCaptor.forClass(Map.class);
+        ArgumentCaptor<Set<String>> usingHistoryPrimaryKeyCap = ArgumentCaptor.forClass(Set.class);
+        doNothing().when(usingHistory).sendMessage(
+            usingHistoryOperationNameCap.capture(),
+            usingHistoryParametersCap.capture(),
+            usingHistoryPrimaryKeyCap.capture()
+        );
+
         List<WordDTO> res = localStatisticService.getMostPopularWordsForUser(user1, 5);
 
         assertEquals("incorrect statistic", 3, res.size());
@@ -532,9 +667,50 @@ class LocalStatisticServiceTest {
             1,
             res.get(2).count()
         );
+
+        assertEquals(
+            "incorrect history message",
+            1,
+            usingHistoryOperationNameCap.getAllValues().size()
+        );
+        assertEquals(
+            "incorrect history message",
+            "getMostPopularWordsForUser",
+            usingHistoryOperationNameCap.getValue()
+        );
+        assertEquals(
+            "incorrect history message",
+            Map.of(
+                "accepted", 3,
+                "limit", 5,
+                "userId", usingHistoryParametersCap.getValue().get("userId")
+            ),
+            usingHistoryParametersCap.getValue()
+        );
+        assertEquals(
+            "incorrect history message",
+            user1,
+            UUID.fromString((String) usingHistoryParametersCap.getValue().get("userId"))
+        );
+        assertEquals(
+            "incorrect history message",
+            Set.of(
+                "limit"
+            ),
+            usingHistoryPrimaryKeyCap.getValue()
+        );
     }
     @Test
     public void getMostPopularWordsForUserTest5() {
+        ArgumentCaptor<String> usingHistoryOperationNameCap = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<Map<String, Object>> usingHistoryParametersCap = ArgumentCaptor.forClass(Map.class);
+        ArgumentCaptor<Set<String>> usingHistoryPrimaryKeyCap = ArgumentCaptor.forClass(Set.class);
+        doNothing().when(usingHistory).sendMessage(
+            usingHistoryOperationNameCap.capture(),
+            usingHistoryParametersCap.capture(),
+            usingHistoryPrimaryKeyCap.capture()
+        );
+
         List<WordDTO> res = localStatisticService.getMostPopularWordsForUser(user3, 2);
 
         assertEquals("incorrect statistic", 2, res.size());
@@ -559,12 +735,86 @@ class LocalStatisticServiceTest {
             2,
             res.get(1).count()
         );
+
+        assertEquals(
+            "incorrect history message",
+            1,
+            usingHistoryOperationNameCap.getAllValues().size()
+        );
+        assertEquals(
+            "incorrect history message",
+            "getMostPopularWordsForUser",
+            usingHistoryOperationNameCap.getValue()
+        );
+        assertEquals(
+            "incorrect history message",
+            Map.of(
+                "accepted", 2,
+                "limit", 2,
+                "userId", usingHistoryParametersCap.getValue().get("userId")
+            ),
+            usingHistoryParametersCap.getValue()
+        );
+        assertEquals(
+            "incorrect history message",
+            user3,
+            UUID.fromString((String) usingHistoryParametersCap.getValue().get("userId"))
+        );
+        assertEquals(
+            "incorrect history message",
+            Set.of(
+                "limit"
+            ),
+            usingHistoryPrimaryKeyCap.getValue()
+        );
     }
     @Test
     public void getMostPopularWordsForUserTest6() {
-        List<WordDTO> res = localStatisticService.getMostPopularWordsForUser(UUID.randomUUID(), 5);
+        ArgumentCaptor<String> usingHistoryOperationNameCap = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<Map<String, Object>> usingHistoryParametersCap = ArgumentCaptor.forClass(Map.class);
+        ArgumentCaptor<Set<String>> usingHistoryPrimaryKeyCap = ArgumentCaptor.forClass(Set.class);
+        doNothing().when(usingHistory).sendMessage(
+            usingHistoryOperationNameCap.capture(),
+            usingHistoryParametersCap.capture(),
+            usingHistoryPrimaryKeyCap.capture()
+        );
+
+        final UUID userNew = UUID.randomUUID();
+        List<WordDTO> res = localStatisticService.getMostPopularWordsForUser(userNew, 5);
 
         assertEquals("incorrect statistic", 0, res.size());
+
+        assertEquals(
+            "incorrect history message",
+            1,
+            usingHistoryOperationNameCap.getAllValues().size()
+        );
+        assertEquals(
+            "incorrect history message",
+            "getMostPopularWordsForUser",
+            usingHistoryOperationNameCap.getValue()
+        );
+        assertEquals(
+            "incorrect history message",
+            Map.of(
+                "accepted", 0,
+                "limit", 5,
+                "userId", usingHistoryParametersCap.getValue().get("userId")
+            ),
+            usingHistoryParametersCap.getValue()
+        );
+        assertEquals(
+            "incorrect history message",
+            userNew,
+            UUID.fromString((String) usingHistoryParametersCap.getValue().get("userId"))
+        );
+        assertEquals(
+            "incorrect history message",
+            Set.of(
+                "limit"
+            ),
+            usingHistoryPrimaryKeyCap.getValue()
+        );
     }
 
     @Test
@@ -591,6 +841,15 @@ class LocalStatisticServiceTest {
                 callMethods.add(saveMethod);
                 return null;
             });
+
+        ArgumentCaptor<String> usingHistoryOperationNameCap = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<Map<String, Object>> usingHistoryParametersCap = ArgumentCaptor.forClass(Map.class);
+        ArgumentCaptor<Set<String>> usingHistoryPrimaryKeyCap = ArgumentCaptor.forClass(Set.class);
+        doNothing().when(usingHistory).sendMessage(
+            usingHistoryOperationNameCap.capture(),
+            usingHistoryParametersCap.capture(),
+            usingHistoryPrimaryKeyCap.capture()
+        );
 
         List<WordDTO> res = localStatisticService.getMostPopularWordsForTopic(user3, "topic1", 2);
 
@@ -662,6 +921,45 @@ class LocalStatisticServiceTest {
             0,
             getMostPopularWordsListForTextCashDeleteIdCap.getAllValues().size()
         );
+
+        assertEquals(
+            "incorrect history message",
+            1,
+            usingHistoryOperationNameCap.getAllValues().size()
+        );
+        assertEquals(
+            "incorrect history message",
+            "getMostPopularWordsForTopic",
+            usingHistoryOperationNameCap.getValue()
+        );
+        assertEquals(
+            "incorrect history message",
+            Map.of(
+                "accepted", 2,
+                "limit", 2,
+                "userId", usingHistoryParametersCap.getValue().get("userId"),
+                "topicName", "topic1",
+                "topicId", usingHistoryParametersCap.getValue().get("topicId")
+            ),
+            usingHistoryParametersCap.getValue()
+        );
+        assertEquals(
+            "incorrect history message",
+            user3,
+            UUID.fromString((String) usingHistoryParametersCap.getValue().get("userId"))
+        );
+        assertEquals(
+            "incorrect history message",
+            topicRepository.findByUserIdAndName(user3, "topic1").get().getId(),
+            usingHistoryParametersCap.getValue().get("topicId")
+        );
+        assertEquals(
+            "incorrect history message",
+            Set.of(
+                "limit"
+            ),
+            usingHistoryPrimaryKeyCap.getValue()
+        );
     }
     @Test
     public void getMostPopularWordsForTopicTest2() throws RestApiException {
@@ -696,6 +994,15 @@ class LocalStatisticServiceTest {
                 callMethods.add(saveMethod);
                 return null;
             });
+
+        ArgumentCaptor<String> usingHistoryOperationNameCap = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<Map<String, Object>> usingHistoryParametersCap = ArgumentCaptor.forClass(Map.class);
+        ArgumentCaptor<Set<String>> usingHistoryPrimaryKeyCap = ArgumentCaptor.forClass(Set.class);
+        doNothing().when(usingHistory).sendMessage(
+            usingHistoryOperationNameCap.capture(),
+            usingHistoryParametersCap.capture(),
+            usingHistoryPrimaryKeyCap.capture()
+        );
 
         List<WordDTO> res = localStatisticService.getMostPopularWordsForTopic(user3, "topic1", 2);
 
@@ -772,6 +1079,45 @@ class LocalStatisticServiceTest {
             0,
             getMostPopularWordsListForTextCashDeleteIdCap.getAllValues().size()
         );
+
+        assertEquals(
+            "incorrect history message",
+            1,
+            usingHistoryOperationNameCap.getAllValues().size()
+        );
+        assertEquals(
+            "incorrect history message",
+            "getMostPopularWordsForTopic",
+            usingHistoryOperationNameCap.getValue()
+        );
+        assertEquals(
+            "incorrect history message",
+            Map.of(
+                "accepted", 2,
+                "limit", 2,
+                "userId", usingHistoryParametersCap.getValue().get("userId"),
+                "topicName", "topic1",
+                "topicId", usingHistoryParametersCap.getValue().get("topicId")
+            ),
+            usingHistoryParametersCap.getValue()
+        );
+        assertEquals(
+            "incorrect history message",
+            user3,
+            UUID.fromString((String) usingHistoryParametersCap.getValue().get("userId"))
+        );
+        assertEquals(
+            "incorrect history message",
+            topicRepository.findByUserIdAndName(user3, "topic1").get().getId(),
+            usingHistoryParametersCap.getValue().get("topicId")
+        );
+        assertEquals(
+            "incorrect history message",
+            Set.of(
+                "limit"
+            ),
+            usingHistoryPrimaryKeyCap.getValue()
+        );
     }
     @Test
     public void getMostPopularWordsForTopicTest3() throws RestApiException {
@@ -808,6 +1154,15 @@ class LocalStatisticServiceTest {
                 callMethods.add(saveMethod);
                 return null;
             });
+
+        ArgumentCaptor<String> usingHistoryOperationNameCap = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<Map<String, Object>> usingHistoryParametersCap = ArgumentCaptor.forClass(Map.class);
+        ArgumentCaptor<Set<String>> usingHistoryPrimaryKeyCap = ArgumentCaptor.forClass(Set.class);
+        doNothing().when(usingHistory).sendMessage(
+            usingHistoryOperationNameCap.capture(),
+            usingHistoryParametersCap.capture(),
+            usingHistoryPrimaryKeyCap.capture()
+        );
 
         List<WordDTO> res = localStatisticService.getMostPopularWordsForTopic(user3, "topic1", 2);
 
@@ -877,9 +1232,57 @@ class LocalStatisticServiceTest {
             0,
             getMostPopularWordsListForTextCashDeleteIdCap.getAllValues().size()
         );
+
+        assertEquals(
+            "incorrect history message",
+            1,
+            usingHistoryOperationNameCap.getAllValues().size()
+        );
+        assertEquals(
+            "incorrect history message",
+            "getMostPopularWordsForTopic",
+            usingHistoryOperationNameCap.getValue()
+        );
+        assertEquals(
+            "incorrect history message",
+            Map.of(
+                "accepted", 2,
+                "limit", 2,
+                "userId", usingHistoryParametersCap.getValue().get("userId"),
+                "topicName", "topic1",
+                "topicId", usingHistoryParametersCap.getValue().get("topicId")
+            ),
+            usingHistoryParametersCap.getValue()
+        );
+        assertEquals(
+            "incorrect history message",
+            user3,
+            UUID.fromString((String) usingHistoryParametersCap.getValue().get("userId"))
+        );
+        assertEquals(
+            "incorrect history message",
+            topicRepository.findByUserIdAndName(user3, "topic1").get().getId(),
+            usingHistoryParametersCap.getValue().get("topicId")
+        );
+        assertEquals(
+            "incorrect history message",
+            Set.of(
+                "limit"
+            ),
+            usingHistoryPrimaryKeyCap.getValue()
+        );
     }
     @Test
     public void getMostPopularWordsForTopicTest4() throws RestApiException {
+        ArgumentCaptor<String> usingHistoryOperationNameCap = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<Map<String, Object>> usingHistoryParametersCap = ArgumentCaptor.forClass(Map.class);
+        ArgumentCaptor<Set<String>> usingHistoryPrimaryKeyCap = ArgumentCaptor.forClass(Set.class);
+        doNothing().when(usingHistory).sendMessage(
+            usingHistoryOperationNameCap.capture(),
+            usingHistoryParametersCap.capture(),
+            usingHistoryPrimaryKeyCap.capture()
+        );
+
         List<WordDTO> res = localStatisticService.getMostPopularWordsForTopic(user3, "topic2", 1);
 
         assertEquals("incorrect statistic", 1, res.size());
@@ -894,15 +1297,111 @@ class LocalStatisticServiceTest {
             1,
             res.get(0).count()
         );
+
+        assertEquals(
+            "incorrect history message",
+            1,
+            usingHistoryOperationNameCap.getAllValues().size()
+        );
+        assertEquals(
+            "incorrect history message",
+            "getMostPopularWordsForTopic",
+            usingHistoryOperationNameCap.getValue()
+        );
+        assertEquals(
+            "incorrect history message",
+            Map.of(
+                "accepted", 1,
+                "limit", 1,
+                "userId", usingHistoryParametersCap.getValue().get("userId"),
+                "topicName", "topic2",
+                "topicId", usingHistoryParametersCap.getValue().get("topicId")
+            ),
+            usingHistoryParametersCap.getValue()
+        );
+        assertEquals(
+            "incorrect history message",
+            user3,
+            UUID.fromString((String) usingHistoryParametersCap.getValue().get("userId"))
+        );
+        assertEquals(
+            "incorrect history message",
+            topicRepository.findByUserIdAndName(user3, "topic2").get().getId(),
+            usingHistoryParametersCap.getValue().get("topicId")
+        );
+        assertEquals(
+            "incorrect history message",
+            Set.of(
+                "limit"
+            ),
+            usingHistoryPrimaryKeyCap.getValue()
+        );
     }
     @Test
     public void getMostPopularWordsForTopicTest5() throws RestApiException {
+        ArgumentCaptor<String> usingHistoryOperationNameCap = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<Map<String, Object>> usingHistoryParametersCap = ArgumentCaptor.forClass(Map.class);
+        ArgumentCaptor<Set<String>> usingHistoryPrimaryKeyCap = ArgumentCaptor.forClass(Set.class);
+        doNothing().when(usingHistory).sendMessage(
+            usingHistoryOperationNameCap.capture(),
+            usingHistoryParametersCap.capture(),
+            usingHistoryPrimaryKeyCap.capture()
+        );
+
         List<WordDTO> res = localStatisticService.getMostPopularWordsForTopic(user3, "topic3", 2);
 
         assertEquals("incorrect statistic", 0, res.size());
+
+        assertEquals(
+            "incorrect history message",
+            1,
+            usingHistoryOperationNameCap.getAllValues().size()
+        );
+        assertEquals(
+            "incorrect history message",
+            "getMostPopularWordsForTopic",
+            usingHistoryOperationNameCap.getValue()
+        );
+        assertEquals(
+            "incorrect history message",
+            Map.of(
+                "accepted", 0,
+                "limit", 2,
+                "userId", usingHistoryParametersCap.getValue().get("userId"),
+                "topicName", "topic3",
+                "topicId", usingHistoryParametersCap.getValue().get("topicId")
+            ),
+            usingHistoryParametersCap.getValue()
+        );
+        assertEquals(
+            "incorrect history message",
+            user3,
+            UUID.fromString((String) usingHistoryParametersCap.getValue().get("userId"))
+        );
+        assertEquals(
+            "incorrect history message",
+            topicRepository.findByUserIdAndName(user3, "topic3").get().getId(),
+            usingHistoryParametersCap.getValue().get("topicId")
+        );
+        assertEquals(
+            "incorrect history message",
+            Set.of(
+                "limit"
+            ),
+            usingHistoryPrimaryKeyCap.getValue()
+        );
     }
     @Test
     public void getMostPopularWordsForTopicTest6() {
+        ArgumentCaptor<String> usingHistoryOperationNameCap = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<Map<String, Object>> usingHistoryParametersCap = ArgumentCaptor.forClass(Map.class);
+        ArgumentCaptor<Set<String>> usingHistoryPrimaryKeyCap = ArgumentCaptor.forClass(Set.class);
+        doNothing().when(usingHistory).sendMessage(
+            usingHistoryOperationNameCap.capture(),
+            usingHistoryParametersCap.capture(),
+            usingHistoryPrimaryKeyCap.capture()
+        );
+
         try {
             localStatisticService.getMostPopularWordsForTopic(user3, "topic4", 2);
         } catch (RestApiException e) {
@@ -912,6 +1411,38 @@ class LocalStatisticServiceTest {
                 e
             );
 
+            assertEquals(
+                "incorrect history message",
+                1,
+                usingHistoryOperationNameCap.getAllValues().size()
+            );
+            assertEquals(
+                "incorrect history message",
+                "getMostPopularWordsForTopic_topicNotFoundError",
+                usingHistoryOperationNameCap.getValue()
+            );
+            assertEquals(
+                "incorrect history message",
+                Map.of(
+                    "userId", usingHistoryParametersCap.getValue().get("userId"),
+                    "limit", 2,
+                    "topicName", "topic4"
+                ),
+                usingHistoryParametersCap.getValue()
+            );
+            assertEquals(
+                "incorrect history message",
+                user3,
+                UUID.fromString((String) usingHistoryParametersCap.getValue().get("userId"))
+            );
+            assertEquals(
+                "incorrect history message",
+                Set.of(
+                    "topicName"
+                ),
+                usingHistoryPrimaryKeyCap.getValue()
+            );
+
             return;
         }
 
@@ -919,6 +1450,15 @@ class LocalStatisticServiceTest {
     }
     @Test
     public void getMostPopularWordsForTopicTest7() throws RestApiException {
+        ArgumentCaptor<String> usingHistoryOperationNameCap = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<Map<String, Object>> usingHistoryParametersCap = ArgumentCaptor.forClass(Map.class);
+        ArgumentCaptor<Set<String>> usingHistoryPrimaryKeyCap = ArgumentCaptor.forClass(Set.class);
+        doNothing().when(usingHistory).sendMessage(
+            usingHistoryOperationNameCap.capture(),
+            usingHistoryParametersCap.capture(),
+            usingHistoryPrimaryKeyCap.capture()
+        );
+
         try {
             localStatisticService.getMostPopularWordsForTopic(user3, "topic4", 0);
         } catch (jakarta.validation.ConstraintViolationException e) {
@@ -927,6 +1467,13 @@ class LocalStatisticServiceTest {
                 "jakarta.validation.ConstraintViolationException: getMostPopularWordsForTopic.limit: must be greater than or equal to 1",
                 e.toString()
             );
+
+            assertEquals(
+                "incorrect history message",
+                0,
+                usingHistoryOperationNameCap.getAllValues().size()
+            );
+
             return;
         }
 
@@ -958,6 +1505,15 @@ class LocalStatisticServiceTest {
                 callMethods.add(saveMethod);
                 return null;
             });
+
+        ArgumentCaptor<String> usingHistoryOperationNameCap = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<Map<String, Object>> usingHistoryParametersCap = ArgumentCaptor.forClass(Map.class);
+        ArgumentCaptor<Set<String>> usingHistoryPrimaryKeyCap = ArgumentCaptor.forClass(Set.class);
+        doNothing().when(usingHistory).sendMessage(
+            usingHistoryOperationNameCap.capture(),
+            usingHistoryParametersCap.capture(),
+            usingHistoryPrimaryKeyCap.capture()
+        );
 
         List<WordDTO> res = localStatisticService.getMostPopularWordsForText(
             user2, "topic1", "text211", 2
@@ -1027,6 +1583,52 @@ class LocalStatisticServiceTest {
             0,
             getMostPopularWordsListForTopicCashDeleteIdCap.getAllValues().size()
         );
+
+        assertEquals(
+            "incorrect history message",
+            1,
+            usingHistoryOperationNameCap.getAllValues().size()
+        );
+        assertEquals(
+            "incorrect history message",
+            "getMostPopularWordsForText",
+            usingHistoryOperationNameCap.getValue()
+        );
+        assertEquals(
+            "incorrect history message",
+            Map.of(
+                "accepted", 2,
+                "limit", 2,
+                "userId", usingHistoryParametersCap.getValue().get("userId"),
+                "topicName", "topic1",
+                "topicId", usingHistoryParametersCap.getValue().get("topicId"),
+                "textName", "text211",
+                "textId", usingHistoryParametersCap.getValue().get("textId")
+            ),
+            usingHistoryParametersCap.getValue()
+        );
+        assertEquals(
+            "incorrect history message",
+            user2,
+            UUID.fromString((String) usingHistoryParametersCap.getValue().get("userId"))
+        );
+        assertEquals(
+            "incorrect history message",
+            topicRepository.findByUserIdAndName(user2, "topic1").get().getId(),
+            usingHistoryParametersCap.getValue().get("topicId")
+        );
+        assertEquals(
+            "incorrect history message",
+            textRepository.findByTopicAndName(topicRepository.findByUserIdAndName(user2, "topic1").get(), "text211").get().getId(),
+            usingHistoryParametersCap.getValue().get("textId")
+        );
+        assertEquals(
+            "incorrect history message",
+            Set.of(
+                "limit"
+            ),
+            usingHistoryPrimaryKeyCap.getValue()
+        );
     }
     @Test
     public void getMostPopularWordsForTextTest2() throws RestApiException {
@@ -1065,6 +1667,14 @@ class LocalStatisticServiceTest {
                 callMethods.add(saveMethod);
                 return null;
             });
+        ArgumentCaptor<String> usingHistoryOperationNameCap = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<Map<String, Object>> usingHistoryParametersCap = ArgumentCaptor.forClass(Map.class);
+        ArgumentCaptor<Set<String>> usingHistoryPrimaryKeyCap = ArgumentCaptor.forClass(Set.class);
+        doNothing().when(usingHistory).sendMessage(
+            usingHistoryOperationNameCap.capture(),
+            usingHistoryParametersCap.capture(),
+            usingHistoryPrimaryKeyCap.capture()
+        );
 
         List<WordDTO> res = localStatisticService.getMostPopularWordsForText(
             user2, "topic1", "text211", 2
@@ -1140,6 +1750,52 @@ class LocalStatisticServiceTest {
             0,
             getMostPopularWordsListForTopicCashDeleteIdCap.getAllValues().size()
         );
+
+        assertEquals(
+            "incorrect history message",
+            1,
+            usingHistoryOperationNameCap.getAllValues().size()
+        );
+        assertEquals(
+            "incorrect history message",
+            "getMostPopularWordsForText",
+            usingHistoryOperationNameCap.getValue()
+        );
+        assertEquals(
+            "incorrect history message",
+            Map.of(
+                "accepted", 2,
+                "limit", 2,
+                "userId", usingHistoryParametersCap.getValue().get("userId"),
+                "topicName", "topic1",
+                "topicId", usingHistoryParametersCap.getValue().get("topicId"),
+                "textName", "text211",
+                "textId", usingHistoryParametersCap.getValue().get("textId")
+            ),
+            usingHistoryParametersCap.getValue()
+        );
+        assertEquals(
+            "incorrect history message",
+            user2,
+            UUID.fromString((String) usingHistoryParametersCap.getValue().get("userId"))
+        );
+        assertEquals(
+            "incorrect history message",
+            topicRepository.findByUserIdAndName(user2, "topic1").get().getId(),
+            usingHistoryParametersCap.getValue().get("topicId")
+        );
+        assertEquals(
+            "incorrect history message",
+            textRepository.findByTopicAndName(topicRepository.findByUserIdAndName(user2, "topic1").get(), "text211").get().getId(),
+            usingHistoryParametersCap.getValue().get("textId")
+        );
+        assertEquals(
+            "incorrect history message",
+            Set.of(
+                "limit"
+            ),
+            usingHistoryPrimaryKeyCap.getValue()
+        );
     }
 
     @Test
@@ -1181,6 +1837,14 @@ class LocalStatisticServiceTest {
                 callMethods.add(saveMethod);
                 return null;
             });
+        ArgumentCaptor<String> usingHistoryOperationNameCap = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<Map<String, Object>> usingHistoryParametersCap = ArgumentCaptor.forClass(Map.class);
+        ArgumentCaptor<Set<String>> usingHistoryPrimaryKeyCap = ArgumentCaptor.forClass(Set.class);
+        doNothing().when(usingHistory).sendMessage(
+            usingHistoryOperationNameCap.capture(),
+            usingHistoryParametersCap.capture(),
+            usingHistoryPrimaryKeyCap.capture()
+        );
 
         List<WordDTO> res = localStatisticService.getMostPopularWordsForText(
             user2, "topic1", "text211", 2
@@ -1249,9 +1913,63 @@ class LocalStatisticServiceTest {
             0,
             getMostPopularWordsListForTextCashDeleteIdCap.getAllValues().size()
         );
+
+        assertEquals(
+            "incorrect history message",
+            1,
+            usingHistoryOperationNameCap.getAllValues().size()
+        );
+        assertEquals(
+            "incorrect history message",
+            "getMostPopularWordsForText",
+            usingHistoryOperationNameCap.getValue()
+        );
+        assertEquals(
+            "incorrect history message",
+            Map.of(
+                "accepted", 2,
+                "limit", 2,
+                "userId", usingHistoryParametersCap.getValue().get("userId"),
+                "topicName", "topic1",
+                "topicId", usingHistoryParametersCap.getValue().get("topicId"),
+                "textName", "text211",
+                "textId", usingHistoryParametersCap.getValue().get("textId")
+            ),
+            usingHistoryParametersCap.getValue()
+        );
+        assertEquals(
+            "incorrect history message",
+            user2,
+            UUID.fromString((String) usingHistoryParametersCap.getValue().get("userId"))
+        );
+        assertEquals(
+            "incorrect history message",
+            topicRepository.findByUserIdAndName(user2, "topic1").get().getId(),
+            usingHistoryParametersCap.getValue().get("topicId")
+        );
+        assertEquals(
+            "incorrect history message",
+            textRepository.findByTopicAndName(topicRepository.findByUserIdAndName(user2, "topic1").get(), "text211").get().getId(),
+            usingHistoryParametersCap.getValue().get("textId")
+        );
+        assertEquals(
+            "incorrect history message",
+            Set.of(
+                "limit"
+            ),
+            usingHistoryPrimaryKeyCap.getValue()
+        );
     }
     @Test
     public void getMostPopularWordsForTextTest4() throws RestApiException {
+        ArgumentCaptor<String> usingHistoryOperationNameCap = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<Map<String, Object>> usingHistoryParametersCap = ArgumentCaptor.forClass(Map.class);
+        ArgumentCaptor<Set<String>> usingHistoryPrimaryKeyCap = ArgumentCaptor.forClass(Set.class);
+        doNothing().when(usingHistory).sendMessage(
+            usingHistoryOperationNameCap.capture(),
+            usingHistoryParametersCap.capture(),
+            usingHistoryPrimaryKeyCap.capture()
+        );
         List<WordDTO> res = localStatisticService.getMostPopularWordsForText(
             user2, "topic1", "text211", 3
         );
@@ -1273,9 +1991,64 @@ class LocalStatisticServiceTest {
             new WordDTO("a", 1),
             res.get(2)
         );
+
+        assertEquals(
+            "incorrect history message",
+            1,
+            usingHistoryOperationNameCap.getAllValues().size()
+        );
+        assertEquals(
+            "incorrect history message",
+            "getMostPopularWordsForText",
+            usingHistoryOperationNameCap.getValue()
+        );
+        assertEquals(
+            "incorrect history message",
+            Map.of(
+                "accepted", 3,
+                "limit", 3,
+                "userId", usingHistoryParametersCap.getValue().get("userId"),
+                "topicName", "topic1",
+                "topicId", usingHistoryParametersCap.getValue().get("topicId"),
+                "textName", "text211",
+                "textId", usingHistoryParametersCap.getValue().get("textId")
+            ),
+            usingHistoryParametersCap.getValue()
+        );
+        assertEquals(
+            "incorrect history message",
+            user2,
+            UUID.fromString((String) usingHistoryParametersCap.getValue().get("userId"))
+        );
+        assertEquals(
+            "incorrect history message",
+            topicRepository.findByUserIdAndName(user2, "topic1").get().getId(),
+            usingHistoryParametersCap.getValue().get("topicId")
+        );
+        assertEquals(
+            "incorrect history message",
+            textRepository.findByTopicAndName(topicRepository.findByUserIdAndName(user2, "topic1").get(), "text211").get().getId(),
+            usingHistoryParametersCap.getValue().get("textId")
+        );
+        assertEquals(
+            "incorrect history message",
+            Set.of(
+                "limit"
+            ),
+            usingHistoryPrimaryKeyCap.getValue()
+        );
     }
     @Test
     public void getMostPopularWordsForTextTest5() throws RestApiException {
+        ArgumentCaptor<String> usingHistoryOperationNameCap = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<Map<String, Object>> usingHistoryParametersCap = ArgumentCaptor.forClass(Map.class);
+        ArgumentCaptor<Set<String>> usingHistoryPrimaryKeyCap = ArgumentCaptor.forClass(Set.class);
+        doNothing().when(usingHistory).sendMessage(
+            usingHistoryOperationNameCap.capture(),
+            usingHistoryParametersCap.capture(),
+            usingHistoryPrimaryKeyCap.capture()
+        );
+
         List<WordDTO> res = localStatisticService.getMostPopularWordsForText(
             user2, "topic1", "text211", 4
         );
@@ -1297,9 +2070,64 @@ class LocalStatisticServiceTest {
             new WordDTO("a", 1),
             res.get(2)
         );
+
+        assertEquals(
+            "incorrect history message",
+            1,
+            usingHistoryOperationNameCap.getAllValues().size()
+        );
+        assertEquals(
+            "incorrect history message",
+            "getMostPopularWordsForText",
+            usingHistoryOperationNameCap.getValue()
+        );
+        assertEquals(
+            "incorrect history message",
+            Map.of(
+                "accepted", 3,
+                "limit", 4,
+                "userId", usingHistoryParametersCap.getValue().get("userId"),
+                "topicName", "topic1",
+                "topicId", usingHistoryParametersCap.getValue().get("topicId"),
+                "textName", "text211",
+                "textId", usingHistoryParametersCap.getValue().get("textId")
+            ),
+            usingHistoryParametersCap.getValue()
+        );
+        assertEquals(
+            "incorrect history message",
+            user2,
+            UUID.fromString((String) usingHistoryParametersCap.getValue().get("userId"))
+        );
+        assertEquals(
+            "incorrect history message",
+            topicRepository.findByUserIdAndName(user2, "topic1").get().getId(),
+            usingHistoryParametersCap.getValue().get("topicId")
+        );
+        assertEquals(
+            "incorrect history message",
+            textRepository.findByTopicAndName(topicRepository.findByUserIdAndName(user2, "topic1").get(), "text211").get().getId(),
+            usingHistoryParametersCap.getValue().get("textId")
+        );
+        assertEquals(
+            "incorrect history message",
+            Set.of(
+                "limit"
+            ),
+            usingHistoryPrimaryKeyCap.getValue()
+        );
     }
     @Test
     public void getMostPopularWordsForTextTest6() {
+        ArgumentCaptor<String> usingHistoryOperationNameCap = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<Map<String, Object>> usingHistoryParametersCap = ArgumentCaptor.forClass(Map.class);
+        ArgumentCaptor<Set<String>> usingHistoryPrimaryKeyCap = ArgumentCaptor.forClass(Set.class);
+        doNothing().when(usingHistory).sendMessage(
+            usingHistoryOperationNameCap.capture(),
+            usingHistoryParametersCap.capture(),
+            usingHistoryPrimaryKeyCap.capture()
+        );
+
         try {
             localStatisticService.getMostPopularWordsForText(
                 user2, "topic9", "text211", 4
@@ -1310,6 +2138,39 @@ class LocalStatisticServiceTest {
                 new RestApiException("a topic is not found", HttpStatus.NOT_FOUND),
                 e
             );
+
+            assertEquals(
+                "incorrect history message",
+                1,
+                usingHistoryOperationNameCap.getAllValues().size()
+            );
+            assertEquals(
+                "incorrect history message",
+                "getMostPopularWordsForText_TopicNotFoundError",
+                usingHistoryOperationNameCap.getValue()
+            );
+            assertEquals(
+                "incorrect history message",
+                Map.of(
+                    "limit", 4,
+                    "userId", usingHistoryParametersCap.getValue().get("userId"),
+                    "topicName", "topic9",
+                    "textName", "text211"
+                ),
+                usingHistoryParametersCap.getValue()
+            );
+            assertEquals(
+                "incorrect history message",
+                user2,
+                UUID.fromString((String) usingHistoryParametersCap.getValue().get("userId"))
+            );
+            assertEquals(
+                "incorrect history message",
+                Set.of(
+                    "topicName", "textName"
+                ),
+                usingHistoryPrimaryKeyCap.getValue()
+            );
             return;
         }
 
@@ -1317,6 +2178,15 @@ class LocalStatisticServiceTest {
     }
     @Test
     public void getMostPopularWordsForTextTest7() {
+        ArgumentCaptor<String> usingHistoryOperationNameCap = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<Map<String, Object>> usingHistoryParametersCap = ArgumentCaptor.forClass(Map.class);
+        ArgumentCaptor<Set<String>> usingHistoryPrimaryKeyCap = ArgumentCaptor.forClass(Set.class);
+        doNothing().when(usingHistory).sendMessage(
+            usingHistoryOperationNameCap.capture(),
+            usingHistoryParametersCap.capture(),
+            usingHistoryPrimaryKeyCap.capture()
+        );
+
         try {
             localStatisticService.getMostPopularWordsForText(
                 user2, "topic1", "text219", 4
@@ -1327,6 +2197,46 @@ class LocalStatisticServiceTest {
                 new RestApiException("a text is not found", HttpStatus.NOT_FOUND),
                 e
             );
+
+            assertEquals(
+                "incorrect history message",
+                1,
+                usingHistoryOperationNameCap.getAllValues().size()
+            );
+            assertEquals(
+                "incorrect history message",
+                "getMostPopularWordsForText_TextNotFoundError",
+                usingHistoryOperationNameCap.getValue()
+            );
+            assertEquals(
+                "incorrect history message",
+                Map.of(
+                    "limit", 4,
+                    "userId", usingHistoryParametersCap.getValue().get("userId"),
+                    "topicName", "topic1",
+                    "topicId", usingHistoryParametersCap.getValue().get("topicId"),
+                    "textName", "text219"
+                ),
+                usingHistoryParametersCap.getValue()
+            );
+            assertEquals(
+                "incorrect history message",
+                user2,
+                UUID.fromString((String) usingHistoryParametersCap.getValue().get("userId"))
+            );
+            assertEquals(
+                "incorrect history message",
+                topicRepository.findByUserIdAndName(user2, "topic1").get().getId(),
+                usingHistoryParametersCap.getValue().get("topicId")
+            );
+            assertEquals(
+                "incorrect history message",
+                Set.of(
+                    "topicName", "textName"
+                ),
+                usingHistoryPrimaryKeyCap.getValue()
+            );
+
             return;
         }
 
@@ -1334,6 +2244,15 @@ class LocalStatisticServiceTest {
     }
     @Test
     public void getMostPopularWordsForTextTest8() throws RestApiException {
+        ArgumentCaptor<String> usingHistoryOperationNameCap = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<Map<String, Object>> usingHistoryParametersCap = ArgumentCaptor.forClass(Map.class);
+        ArgumentCaptor<Set<String>> usingHistoryPrimaryKeyCap = ArgumentCaptor.forClass(Set.class);
+        doNothing().when(usingHistory).sendMessage(
+            usingHistoryOperationNameCap.capture(),
+            usingHistoryParametersCap.capture(),
+            usingHistoryPrimaryKeyCap.capture()
+        );
+
         try {
             localStatisticService.getMostPopularWordsForText(
                 user2, "topic1", "text211", 0
@@ -1343,6 +2262,11 @@ class LocalStatisticServiceTest {
                 "incorrect exception",
                 "jakarta.validation.ConstraintViolationException: getMostPopularWordsForText.limit: must be greater than or equal to 1",
                 e.toString()
+            );
+            assertEquals(
+                "incorrect history message",
+                0,
+                usingHistoryOperationNameCap.getAllValues().size()
             );
             return;
         }

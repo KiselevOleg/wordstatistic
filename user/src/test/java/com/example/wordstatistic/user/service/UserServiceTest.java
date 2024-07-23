@@ -1,6 +1,6 @@
 package com.example.wordstatistic.user.service;
 
-import com.example.wordstatistic.user.config.SecurityConfig;
+import com.example.wordstatistic.user.client.UsingHistoryService;
 import com.example.wordstatistic.user.dto.TokenDTO;
 import com.example.wordstatistic.user.dto.UserDTO;
 import com.example.wordstatistic.user.model.Permission;
@@ -11,7 +11,6 @@ import com.example.wordstatistic.user.repository.RoleRepository;
 import com.example.wordstatistic.user.repository.UserRepository;
 import com.example.wordstatistic.user.security.JwtTokenProvider;
 import com.example.wordstatistic.user.util.RestApiException;
-import io.jsonwebtoken.security.Password;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -19,9 +18,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -45,19 +44,24 @@ class UserServiceTest {
     private final JwtTokenProvider jwtTokenProvider;
     private final UserService userService;
 
+    @MockBean
+    private final UsingHistoryService usingHistory;
+
     @Autowired
     public UserServiceTest(
         final UserRepository userRepository,
         final RoleRepository roleRepository,
         final PermissionRepository permissionRepository,
         final JwtTokenProvider jwtTokenProvider,
-        final UserService userService
+        final UserService userService,
+        final UsingHistoryService usingHistory
     ) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.permissionRepository = permissionRepository;
         this.jwtTokenProvider = jwtTokenProvider;
         this.userService = userService;
+        this.usingHistory = usingHistory;
     }
 
     @AfterAll
@@ -80,6 +84,15 @@ class UserServiceTest {
         when(roleRepository.findByName("user")).thenReturn(Optional.of(role));
         ArgumentCaptor<User> userCap = ArgumentCaptor.forClass(User.class);
         when(userRepository.save(userCap.capture())).thenReturn(null);
+
+        ArgumentCaptor<String> usingHistoryOperationNameCap = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<Map<String, Object>> usingHistoryParametersCap = ArgumentCaptor.forClass(Map.class);
+        ArgumentCaptor<Set<String>> usingHistoryPrimaryKeyCap = ArgumentCaptor.forClass(Set.class);
+        doNothing().when(usingHistory).sendMessage(
+            usingHistoryOperationNameCap.capture(),
+            usingHistoryParametersCap.capture(),
+            usingHistoryPrimaryKeyCap.capture()
+        );
 
         userService.singUp(new UserDTO("user1", "password1"));
 
@@ -104,6 +117,39 @@ class UserServiceTest {
             role,
             userCap.getValue().getRole()
         );
+
+        assertEquals(
+            "incorrect usingHisory",
+            1,
+            usingHistoryOperationNameCap.getAllValues().size()
+        );
+        assertEquals(
+            "incorrect usingHistory",
+            "singUp",
+            usingHistoryOperationNameCap.getValue()
+        );
+        assertEquals(
+            "incorrect usingHistory",
+            Map.of(
+                "userName", "user1",
+                "userId", usingHistoryParametersCap.getValue().get("userId")
+            ),
+            usingHistoryParametersCap.getValue()
+        );
+        assertEquals(
+            "incorrect usingHistory",
+            false,
+            userRepository.findByUuid(
+                UUID.fromString((String) usingHistoryParametersCap.getValue().get("userId"))
+            ).isPresent()
+        );
+        assertEquals(
+            "incorrect usingHistory",
+            Set.of(
+                "userName"
+            ),
+            usingHistoryPrimaryKeyCap.getValue()
+        );
     }
     @Test
     public void singUpTest2() throws RestApiException {
@@ -113,11 +159,47 @@ class UserServiceTest {
 
         when(userRepository.existsByName("user1")).thenReturn(true);
 
+        ArgumentCaptor<String> usingHistoryOperationNameCap = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<Map<String, Object>> usingHistoryParametersCap = ArgumentCaptor.forClass(Map.class);
+        ArgumentCaptor<Set<String>> usingHistoryPrimaryKeyCap = ArgumentCaptor.forClass(Set.class);
+        doNothing().when(usingHistory).sendMessage(
+            usingHistoryOperationNameCap.capture(),
+            usingHistoryParametersCap.capture(),
+            usingHistoryPrimaryKeyCap.capture()
+        );
+
         try {
             userService.singUp(new UserDTO("user1", "password1"));
         } catch(RestApiException e) {
             assertEquals("incorrect exception", "user is found", e.getMessage());
             assertEquals("incorrect exception", HttpStatus.CONFLICT, e.getStatus());
+
+            assertEquals(
+                "incorrect usingHisory",
+                1,
+                usingHistoryOperationNameCap.getAllValues().size()
+            );
+            assertEquals(
+                "incorrect usingHistory",
+                "singUp_userFoundException",
+                usingHistoryOperationNameCap.getValue()
+            );
+            assertEquals(
+                "incorrect usingHistory",
+                Map.of(
+                    "userName", "user1",
+                    "userPasswordLength", 9
+                ),
+                usingHistoryParametersCap.getValue()
+            );
+            assertEquals(
+                "incorrect usingHistory",
+                Set.of(
+                    "userName"
+                ),
+                usingHistoryPrimaryKeyCap.getValue()
+            );
+
             return;
         }
 
