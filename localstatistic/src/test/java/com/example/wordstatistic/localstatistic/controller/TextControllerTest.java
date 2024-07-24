@@ -1,7 +1,6 @@
 package com.example.wordstatistic.localstatistic.controller;
 
-import com.example.wordstatistic.localstatistic.dto.TextEntityDTO;
-import com.example.wordstatistic.localstatistic.dto.TopicDTO;
+import com.example.wordstatistic.localstatistic.dto.*;
 import com.example.wordstatistic.localstatistic.model.Text;
 import com.example.wordstatistic.localstatistic.model.Topic;
 import com.example.wordstatistic.localstatistic.security.JwtTokenProvider;
@@ -660,6 +659,584 @@ class TextControllerTest {
         ResponseEntity<String> response = testRestTemplate
             .postForEntity("http://localhost:"+this.port+"/topicsAndTexts/addNewText",
                 requestEntity, String.class);
+        assertEquals("incorrect result", HttpStatus.UNAUTHORIZED, response.getStatusCode());
+        assertEquals("incorrect result", true, response.getBody() == null);
+    }
+
+    @Test
+    public void updateTopicTest1() throws RestApiException {
+        ArgumentCaptor<UUID> userCap = ArgumentCaptor.forClass(UUID.class);
+        ArgumentCaptor<String> topicOldNameCap = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> topicNewNameCap = ArgumentCaptor.forClass(String.class);
+        doNothing().when(localTextService)
+            .updateTopic(userCap.capture(), topicOldNameCap.capture(), topicNewNameCap.capture());
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(editTextToken);
+        TopicUpdateDTO requestObject = new TopicUpdateDTO("topic1", "Topic1test");
+        HttpEntity<TopicUpdateDTO> requestEntity = new HttpEntity<>(requestObject, headers);
+        ResponseEntity<String> response = testRestTemplate
+            .exchange("http://localhost:"+this.port+"/topicsAndTexts/updateTopic",
+                HttpMethod.PUT, requestEntity, String.class);
+        assertEquals("incorrect result", HttpStatus.OK, response.getStatusCode());
+
+        String res = response.getBody();
+        assertEquals(
+            "incorrect result",
+            true,
+            res == null
+        );
+        assertEquals("incorrect result", 1, userCap.getAllValues().size());
+        assertEquals(
+            "incorrect result",
+            userId,
+            userCap.getValue()
+        );
+        assertEquals(
+            "incorrect result",
+            "topic1",
+            topicOldNameCap.getValue()
+        );
+        assertEquals(
+            "incorrect result",
+            "Topic1test",
+            topicNewNameCap.getValue()
+        );
+    }
+    @Test
+    public void updateTopicTest2() throws RestApiException {
+        ArgumentCaptor<UUID> userCap = ArgumentCaptor.forClass(UUID.class);
+        ArgumentCaptor<String> topicOldNameCap = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> topicNewNameCap = ArgumentCaptor.forClass(String.class);
+        doThrow(LocalTextService.TOPIC_NOT_FOUND_ERROR).when(localTextService)
+            .updateTopic(userCap.capture(), topicOldNameCap.capture(), topicNewNameCap.capture());
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(editTextToken);
+        TopicUpdateDTO requestObject = new TopicUpdateDTO("topic1", "Topic1test");
+        HttpEntity<TopicUpdateDTO> requestEntity = new HttpEntity<>(requestObject, headers);
+        ResponseEntity<String> response = testRestTemplate
+            .exchange("http://localhost:"+this.port+"/topicsAndTexts/updateTopic",
+                HttpMethod.PUT, requestEntity, String.class);
+        assertEquals("incorrect result", HttpStatus.NOT_FOUND, response.getStatusCode());
+
+        String res = response.getBody();
+        assertEquals(
+            "incorrect result",
+            "{\"message\":\"a topic is not found\"}",
+            res
+        );
+        assertEquals("incorrect result", 1, userCap.getAllValues().size());
+        assertEquals(
+            "incorrect result",
+            userId,
+            userCap.getValue()
+        );
+        assertEquals(
+            "incorrect result",
+            "topic1",
+            topicOldNameCap.getValue()
+        );
+        assertEquals(
+            "incorrect result",
+            "Topic1test",
+            topicNewNameCap.getValue()
+        );
+    }
+    @Test
+    public void updateTopicTest3() throws RestApiException {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(invalidToken);
+        TopicUpdateDTO requestObject = new TopicUpdateDTO("topic1", "Topic1test");
+        HttpEntity<TopicUpdateDTO> requestEntity = new HttpEntity<>(requestObject, headers);
+        ResponseEntity<String> response = testRestTemplate
+            .exchange("http://localhost:"+this.port+"/topicsAndTexts/updateTopic",
+                HttpMethod.PUT, requestEntity, String.class);
+        assertEquals("incorrect result", HttpStatus.UNAUTHORIZED, response.getStatusCode());
+        assertEquals("incorrect result", true, response.getBody() == null);
+    }
+    @Test
+    public void updateTopicTest4() throws RestApiException {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(viewTextToken);
+        TopicUpdateDTO requestObject = new TopicUpdateDTO("topic1", "Topic1test");
+        HttpEntity<TopicUpdateDTO> requestEntity = new HttpEntity<>(requestObject, headers);
+        ResponseEntity<String> response = testRestTemplate
+            .exchange("http://localhost:"+this.port+"/topicsAndTexts/updateTopic",
+                HttpMethod.PUT, requestEntity, String.class);
+        assertEquals("incorrect result", HttpStatus.UNAUTHORIZED, response.getStatusCode());
+        assertEquals("incorrect result", true, response.getBody() == null);
+    }
+    @Test
+    public void updateTopicTest5() throws RestApiException {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(noneToken);
+        TopicUpdateDTO requestObject = new TopicUpdateDTO("topic1", "Topic1test");
+        HttpEntity<TopicUpdateDTO> requestEntity = new HttpEntity<>(requestObject, headers);
+        ResponseEntity<String> response = testRestTemplate
+            .exchange("http://localhost:"+this.port+"/topicsAndTexts/updateTopic",
+                HttpMethod.PUT, requestEntity, String.class);
+        assertEquals("incorrect result", HttpStatus.UNAUTHORIZED, response.getStatusCode());
+        assertEquals("incorrect result", true, response.getBody() == null);
+    }
+
+    @Test
+    public void updateTextTest1() throws RestApiException {
+        ArgumentCaptor<UUID> userCap = ArgumentCaptor.forClass(UUID.class);
+        ArgumentCaptor<String> topicNameCap = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> textOldNameCap = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> textNewNameCap = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<Optional<String>> textContentCap = ArgumentCaptor.forClass(Optional.class);
+        doNothing().when(localTextService)
+            .updateText(
+                userCap.capture(), topicNameCap.capture(),
+                textOldNameCap.capture(), textNewNameCap.capture(),
+                textContentCap.capture()
+            );
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(editTextToken);
+        TextUpdateDTO requestObject = new TextUpdateDTO(
+            "topic1", "text1", "text1new", Optional.of("text content")
+        );
+        HttpEntity<TextUpdateDTO> requestEntity = new HttpEntity<>(requestObject, headers);
+        ResponseEntity<String> response = testRestTemplate
+            .exchange("http://localhost:"+this.port+"/topicsAndTexts/updateText",
+                HttpMethod.PUT, requestEntity, String.class);
+        assertEquals("incorrect result", HttpStatus.OK, response.getStatusCode());
+
+        String res = response.getBody();
+        assertEquals(
+            "incorrect result",
+            true,
+            res == null
+        );
+        assertEquals("incorrect result", 1, userCap.getAllValues().size());
+        assertEquals(
+            "incorrect result",
+            userId,
+            userCap.getValue()
+        );
+        assertEquals(
+            "incorrect result",
+            "topic1",
+            topicNameCap.getValue()
+        );
+        assertEquals(
+            "incorrect result",
+            "text1",
+            textOldNameCap.getValue()
+        );
+        assertEquals(
+            "incorrect result",
+            "text1new",
+            textNewNameCap.getValue()
+        );
+        assertEquals(
+            "incorrect result",
+            Optional.of("text content"),
+            textContentCap.getValue()
+        );
+    }
+    @Test
+    public void updateTextTest2() throws RestApiException {
+        ArgumentCaptor<UUID> userCap = ArgumentCaptor.forClass(UUID.class);
+        ArgumentCaptor<String> topicNameCap = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> textOldNameCap = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> textNewNameCap = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<Optional<String>> textContentCap = ArgumentCaptor.forClass(Optional.class);
+        doNothing().when(localTextService)
+            .updateText(
+                userCap.capture(), topicNameCap.capture(),
+                textOldNameCap.capture(), textNewNameCap.capture(),
+                textContentCap.capture()
+            );
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(editTextToken);
+        TextUpdateDTO requestObject = new TextUpdateDTO(
+            "topic1", "text1", "text1new", Optional.empty()
+        );
+        HttpEntity<TextUpdateDTO> requestEntity = new HttpEntity<>(requestObject, headers);
+        ResponseEntity<String> response = testRestTemplate
+            .exchange("http://localhost:"+this.port+"/topicsAndTexts/updateText",
+                HttpMethod.PUT, requestEntity, String.class);
+        assertEquals("incorrect result", HttpStatus.OK, response.getStatusCode());
+
+        String res = response.getBody();
+        assertEquals(
+            "incorrect result",
+            true,
+            res == null
+        );
+        assertEquals("incorrect result", 1, userCap.getAllValues().size());
+        assertEquals(
+            "incorrect result",
+            userId,
+            userCap.getValue()
+        );
+        assertEquals(
+            "incorrect result",
+            "topic1",
+            topicNameCap.getValue()
+        );
+        assertEquals(
+            "incorrect result",
+            "text1",
+            textOldNameCap.getValue()
+        );
+        assertEquals(
+            "incorrect result",
+            "text1new",
+            textNewNameCap.getValue()
+        );
+        assertEquals(
+            "incorrect result",
+            Optional.empty(),
+            textContentCap.getValue()
+        );
+    }
+    @Test
+    public void updateTextTest3() throws RestApiException {
+        ArgumentCaptor<UUID> userCap = ArgumentCaptor.forClass(UUID.class);
+        ArgumentCaptor<String> topicNameCap = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> textOldNameCap = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> textNewNameCap = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<Optional<String>> textContentCap = ArgumentCaptor.forClass(Optional.class);
+        doThrow(LocalTextService.TOPIC_NOT_FOUND_ERROR).when(localTextService)
+            .updateText(
+                userCap.capture(), topicNameCap.capture(),
+                textOldNameCap.capture(), textNewNameCap.capture(),
+                textContentCap.capture()
+            );
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(editTextToken);
+        TextUpdateDTO requestObject = new TextUpdateDTO(
+            "topic1", "text1", "text1new", Optional.of("text content")
+        );
+        HttpEntity<TextUpdateDTO> requestEntity = new HttpEntity<>(requestObject, headers);
+        ResponseEntity<String> response = testRestTemplate
+            .exchange("http://localhost:"+this.port+"/topicsAndTexts/updateText",
+                HttpMethod.PUT, requestEntity, String.class);
+        assertEquals("incorrect result", HttpStatus.NOT_FOUND, response.getStatusCode());
+
+        String res = response.getBody();
+        assertEquals(
+            "incorrect result",
+            "{\"message\":\"a topic is not found\"}",
+            res
+        );
+        assertEquals("incorrect result", 1, userCap.getAllValues().size());
+        assertEquals(
+            "incorrect result",
+            userId,
+            userCap.getValue()
+        );
+        assertEquals(
+            "incorrect result",
+            "topic1",
+            topicNameCap.getValue()
+        );
+        assertEquals(
+            "incorrect result",
+            "text1",
+            textOldNameCap.getValue()
+        );
+        assertEquals(
+            "incorrect result",
+            "text1new",
+            textNewNameCap.getValue()
+        );
+        assertEquals(
+            "incorrect result",
+            Optional.of("text content"),
+            textContentCap.getValue()
+        );
+    }
+    @Test
+    public void updateTextTest4() throws RestApiException {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(invalidToken);
+        TextUpdateDTO requestObject = new TextUpdateDTO(
+            "topic1", "text1", "text1new", Optional.of("text content")
+        );
+        HttpEntity<TextUpdateDTO> requestEntity = new HttpEntity<>(requestObject, headers);
+        ResponseEntity<String> response = testRestTemplate
+            .exchange("http://localhost:"+this.port+"/topicsAndTexts/updateText",
+                HttpMethod.PUT, requestEntity, String.class);
+        assertEquals("incorrect result", HttpStatus.UNAUTHORIZED, response.getStatusCode());
+        assertEquals("incorrect result", true, response.getBody() == null);
+    }
+    @Test
+    public void updateTextTest5() throws RestApiException {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(viewTextToken);
+        TextUpdateDTO requestObject = new TextUpdateDTO(
+            "topic1", "text1", "text1new", Optional.of("text content")
+        );
+        HttpEntity<TextUpdateDTO> requestEntity = new HttpEntity<>(requestObject, headers);
+        ResponseEntity<String> response = testRestTemplate
+            .exchange("http://localhost:"+this.port+"/topicsAndTexts/updateText",
+                HttpMethod.PUT, requestEntity, String.class);
+        assertEquals("incorrect result", HttpStatus.UNAUTHORIZED, response.getStatusCode());
+        assertEquals("incorrect result", true, response.getBody() == null);
+    }
+    @Test
+    public void updateTextTest6() throws RestApiException {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(noneToken);
+        TextUpdateDTO requestObject = new TextUpdateDTO(
+            "topic1", "text1", "text1new", Optional.of("text content")
+        );
+        HttpEntity<TextUpdateDTO> requestEntity = new HttpEntity<>(requestObject, headers);
+        ResponseEntity<String> response = testRestTemplate
+            .exchange("http://localhost:"+this.port+"/topicsAndTexts/updateText",
+                HttpMethod.PUT, requestEntity, String.class);
+        assertEquals("incorrect result", HttpStatus.UNAUTHORIZED, response.getStatusCode());
+        assertEquals("incorrect result", true, response.getBody() == null);
+    }
+
+    @Test
+    public void deleteTopicTest1() throws RestApiException {
+        ArgumentCaptor<UUID> userCap = ArgumentCaptor.forClass(UUID.class);
+        ArgumentCaptor<String> topicNameCap = ArgumentCaptor.forClass(String.class);
+        doNothing().when(localTextService)
+            .deleteTopic(userCap.capture(), topicNameCap.capture());
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(editTextToken);
+        TopicDTO requestObject = new TopicDTO("topic1");
+        HttpEntity<TopicDTO> requestEntity = new HttpEntity<>(requestObject, headers);
+        ResponseEntity<String> response = testRestTemplate
+            .exchange("http://localhost:"+this.port+"/topicsAndTexts/deleteTopic",
+                HttpMethod.DELETE, requestEntity, String.class);
+        assertEquals("incorrect result", HttpStatus.OK, response.getStatusCode());
+
+        String res = response.getBody();
+        assertEquals(
+            "incorrect result",
+            true,
+            res == null
+        );
+        assertEquals("incorrect result", 1, userCap.getAllValues().size());
+        assertEquals(
+            "incorrect result",
+            userId,
+            userCap.getValue()
+        );
+        assertEquals(
+            "incorrect result",
+            "topic1",
+            topicNameCap.getValue()
+        );
+    }
+    @Test
+    public void deleteTopicTest2() throws RestApiException {
+        ArgumentCaptor<UUID> userCap = ArgumentCaptor.forClass(UUID.class);
+        ArgumentCaptor<String> topicNameCap = ArgumentCaptor.forClass(String.class);
+        doThrow(LocalTextService.TOPIC_NOT_FOUND_ERROR).when(localTextService)
+            .deleteTopic(userCap.capture(), topicNameCap.capture());
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(editTextToken);
+        TopicDTO requestObject = new TopicDTO("topic1");
+        HttpEntity<TopicDTO> requestEntity = new HttpEntity<>(requestObject, headers);
+        ResponseEntity<String> response = testRestTemplate
+            .exchange("http://localhost:"+this.port+"/topicsAndTexts/deleteTopic",
+                HttpMethod.DELETE, requestEntity, String.class);
+
+        assertEquals("incorrect result", HttpStatus.NOT_FOUND, response.getStatusCode());
+
+        String res = response.getBody();
+        assertEquals(
+            "incorrect result",
+            "{\"message\":\"a topic is not found\"}",
+            res
+        );
+        assertEquals("incorrect result", 1, userCap.getAllValues().size());
+        assertEquals(
+            "incorrect result",
+            userId,
+            userCap.getValue()
+        );
+        assertEquals(
+            "incorrect result",
+            "topic1",
+            topicNameCap.getValue()
+        );
+    }
+    @Test
+    public void deleteTopicTest3() throws RestApiException {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(invalidToken);
+        TopicUpdateDTO requestObject = new TopicUpdateDTO("topic1", "Topic1test");
+        HttpEntity<TopicUpdateDTO> requestEntity = new HttpEntity<>(requestObject, headers);
+        ResponseEntity<String> response = testRestTemplate
+            .exchange("http://localhost:"+this.port+"/topicsAndTexts/deleteTopic",
+                HttpMethod.DELETE, requestEntity, String.class);
+        assertEquals("incorrect result", HttpStatus.UNAUTHORIZED, response.getStatusCode());
+        assertEquals("incorrect result", true, response.getBody() == null);
+    }
+    @Test
+    public void deleteTopicTest4() throws RestApiException {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(viewTextToken);
+        TopicUpdateDTO requestObject = new TopicUpdateDTO("topic1", "Topic1test");
+        HttpEntity<TopicUpdateDTO> requestEntity = new HttpEntity<>(requestObject, headers);
+        ResponseEntity<String> response = testRestTemplate
+            .exchange("http://localhost:"+this.port+"/topicsAndTexts/deleteTopic",
+                HttpMethod.DELETE, requestEntity, String.class);
+        assertEquals("incorrect result", HttpStatus.UNAUTHORIZED, response.getStatusCode());
+        assertEquals("incorrect result", true, response.getBody() == null);
+    }
+    @Test
+    public void deleteTopicTest5() throws RestApiException {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(noneToken);
+        TopicUpdateDTO requestObject = new TopicUpdateDTO("topic1", "Topic1test");
+        HttpEntity<TopicUpdateDTO> requestEntity = new HttpEntity<>(requestObject, headers);
+        ResponseEntity<String> response = testRestTemplate
+            .exchange("http://localhost:"+this.port+"/topicsAndTexts/deleteTopic",
+                HttpMethod.DELETE, requestEntity, String.class);
+        assertEquals("incorrect result", HttpStatus.UNAUTHORIZED, response.getStatusCode());
+        assertEquals("incorrect result", true, response.getBody() == null);
+    }
+
+    @Test
+    public void deleteTextTest1() throws RestApiException {
+        ArgumentCaptor<UUID> userCap = ArgumentCaptor.forClass(UUID.class);
+        ArgumentCaptor<String> topicNameCap = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> textNameCap = ArgumentCaptor.forClass(String.class);
+        doNothing().when(localTextService)
+            .deleteText(userCap.capture(), topicNameCap.capture(), textNameCap.capture());
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(editTextToken);
+        TextDeleteDTO requestObject = new TextDeleteDTO("topic1", "text1");
+        HttpEntity<TextDeleteDTO> requestEntity = new HttpEntity<>(requestObject, headers);
+        ResponseEntity<String> response = testRestTemplate
+            .exchange("http://localhost:"+this.port+"/topicsAndTexts/deleteText",
+                HttpMethod.DELETE, requestEntity, String.class);
+        assertEquals("incorrect result", HttpStatus.OK, response.getStatusCode());
+
+        String res = response.getBody();
+        assertEquals(
+            "incorrect result",
+            true,
+            res == null
+        );
+        assertEquals("incorrect result", 1, userCap.getAllValues().size());
+        assertEquals(
+            "incorrect result",
+            userId,
+            userCap.getValue()
+        );
+        assertEquals(
+            "incorrect result",
+            "topic1",
+            topicNameCap.getValue()
+        );
+        assertEquals(
+            "incorrect result",
+            "text1",
+            textNameCap.getValue()
+        );
+    }
+    @Test
+    public void deleteTextTest2() throws RestApiException {
+        ArgumentCaptor<UUID> userCap = ArgumentCaptor.forClass(UUID.class);
+        ArgumentCaptor<String> topicNameCap = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> textNameCap = ArgumentCaptor.forClass(String.class);
+        doThrow(LocalTextService.TOPIC_NOT_FOUND_ERROR).when(localTextService)
+            .deleteText(userCap.capture(), topicNameCap.capture(), textNameCap.capture());
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(editTextToken);
+        TextDeleteDTO requestObject = new TextDeleteDTO("topic1", "text1");
+        HttpEntity<TextDeleteDTO> requestEntity = new HttpEntity<>(requestObject, headers);
+        ResponseEntity<String> response = testRestTemplate
+            .exchange("http://localhost:"+this.port+"/topicsAndTexts/deleteText",
+                HttpMethod.DELETE, requestEntity, String.class);
+        assertEquals("incorrect result", HttpStatus.NOT_FOUND, response.getStatusCode());
+
+        String res = response.getBody();
+        assertEquals(
+            "incorrect result",
+            "{\"message\":\"a topic is not found\"}",
+            res
+        );
+        assertEquals("incorrect result", 1, userCap.getAllValues().size());
+        assertEquals(
+            "incorrect result",
+            userId,
+            userCap.getValue()
+        );
+        assertEquals(
+            "incorrect result",
+            "topic1",
+            topicNameCap.getValue()
+        );
+        assertEquals(
+            "incorrect result",
+            "text1",
+            textNameCap.getValue()
+        );
+    }
+    @Test
+    public void deleteTextTest3() throws RestApiException {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(invalidToken);
+        TextDeleteDTO requestObject = new TextDeleteDTO("topic1", "text1");
+        HttpEntity<TextDeleteDTO> requestEntity = new HttpEntity<>(requestObject, headers);
+        ResponseEntity<String> response = testRestTemplate
+            .exchange("http://localhost:"+this.port+"/topicsAndTexts/deleteText",
+                HttpMethod.DELETE, requestEntity, String.class);
+        assertEquals("incorrect result", HttpStatus.UNAUTHORIZED, response.getStatusCode());
+        assertEquals("incorrect result", true, response.getBody() == null);
+    }
+    @Test
+    public void deleteTextTest4() throws RestApiException {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(viewTextToken);
+        TextDeleteDTO requestObject = new TextDeleteDTO("topic1", "text1");
+        HttpEntity<TextDeleteDTO> requestEntity = new HttpEntity<>(requestObject, headers);
+        ResponseEntity<String> response = testRestTemplate
+            .exchange("http://localhost:"+this.port+"/topicsAndTexts/deleteText",
+                HttpMethod.DELETE, requestEntity, String.class);
+        assertEquals("incorrect result", HttpStatus.UNAUTHORIZED, response.getStatusCode());
+        assertEquals("incorrect result", true, response.getBody() == null);
+    }
+    @Test
+    public void deleteTextTest5() throws RestApiException {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(noneToken);
+        TextDeleteDTO requestObject = new TextDeleteDTO("topic1", "text1");
+        HttpEntity<TextDeleteDTO> requestEntity = new HttpEntity<>(requestObject, headers);
+        ResponseEntity<String> response = testRestTemplate
+            .exchange("http://localhost:"+this.port+"/topicsAndTexts/deleteText",
+                HttpMethod.DELETE, requestEntity, String.class);
         assertEquals("incorrect result", HttpStatus.UNAUTHORIZED, response.getStatusCode());
         assertEquals("incorrect result", true, response.getBody() == null);
     }
