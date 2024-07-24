@@ -532,7 +532,7 @@ class LocalTextAddServiceTest {
             );
             assertEquals(
                 "incorrect usingHistory",
-                "addText_topicExistsError",
+                "addText_textExistsError",
                 usingHistoryOperationNameCap.getValue()
             );
             assertEquals(

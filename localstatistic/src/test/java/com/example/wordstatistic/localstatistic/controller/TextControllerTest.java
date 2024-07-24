@@ -596,7 +596,7 @@ class TextControllerTest {
         ArgumentCaptor<String> topicNameCap = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<String> textNameCap = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<String> textCap = ArgumentCaptor.forClass(String.class);
-        doThrow(LocalTextService.TEXT_EXISTS_ERROR).when(localTextService)
+        doThrow(LocalTextService.TEXT_FOUND_ERROR).when(localTextService)
             .addText(userCap.capture(), topicNameCap.capture(), textNameCap.capture(), textCap.capture());
 
         HttpHeaders headers = new HttpHeaders();
