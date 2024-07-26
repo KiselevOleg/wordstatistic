@@ -1,22 +1,23 @@
 /**
  * Copyright 2024 Kiselev Oleg
  */
-package com.example.wordstatistic.user.dto.kafka;
+package com.example.wordstatistic.localstatistic.dto.kafka;
 
-import com.example.wordstatistic.user.util.kafka.KafkaDTOException;
+import com.example.wordstatistic.localstatistic.util.kafka.KafkaDTOException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.validation.constraints.NotNull;
+import org.springframework.validation.annotation.Validated;
 
 import java.util.UUID;
 
 /**
- * a message to a localstatistic service about changing username.
+ * a message to a localstatistic service about deleting a user.
  * @param userId a user's id
- * @param newUsername a username
  */
-public record ChangeUsernameDTO(
-    UUID userId,
-    String newUsername
+@Validated
+public record DeleteUserDTO(
+    @NotNull UUID userId
 ) {
     /**
      * transfer a message to a json.
@@ -25,15 +26,12 @@ public record ChangeUsernameDTO(
      * @throws KafkaDTOException an exception if it can not be executed
      * @throws JsonProcessingException an exception if it can not be executed
      */
-    public static String toJSON(final ChangeUsernameDTO dto) throws KafkaDTOException, JsonProcessingException {
+    public static String toJSON(final DeleteUserDTO dto) throws KafkaDTOException, JsonProcessingException {
         if (dto == null) {
-            throw new KafkaDTOException("UsingHistoryRecord instance is null");
+            throw new KafkaDTOException("dto is null");
         }
-        if (dto.userId() == null) {
-            throw new KafkaDTOException("userid is null");
-        }
-        if (dto.newUsername.isBlank()) {
-            throw new KafkaDTOException("a new username is blank");
+        if (dto.userId == null) {
+            throw new KafkaDTOException("userId is null");
         }
 
         final ObjectMapper mapper = new ObjectMapper();
@@ -48,15 +46,15 @@ public record ChangeUsernameDTO(
      * @throws KafkaDTOException an exception if it can not be executed
      * @throws JsonProcessingException an exception if it can not be executed
      */
-    public static ChangeUsernameDTO fromJSON(final String json) throws KafkaDTOException, JsonProcessingException {
+    public static DeleteUserDTO fromJSON(final String json) throws KafkaDTOException, JsonProcessingException {
         if (json == null) {
             throw new KafkaDTOException("a json string is null");
         }
 
         final ObjectMapper mapper = new ObjectMapper();
-        final ChangeUsernameDTO dto = mapper.readValue(json, ChangeUsernameDTO.class);
-        if (dto.newUsername.isBlank()) {
-            throw new KafkaDTOException("a new username is blank");
+        final DeleteUserDTO dto = mapper.readValue(json, DeleteUserDTO.class);
+        if (dto.userId == null) {
+            throw new KafkaDTOException("userId is null");
         }
         return dto;
     }

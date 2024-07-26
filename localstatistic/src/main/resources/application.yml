@@ -8,6 +8,9 @@ spring:
     kafka:
         bootstrap-servers: kafka:9092
         client-id: localstatistic-producer
+        consumer:
+            bootstrap-servers: kafka:9092
+            group-id: localstatistic-group
     jpa:
         show-sql: true
         properties.hibernate.dialect: org.hibernate.dialect.PostgreSQLDialect

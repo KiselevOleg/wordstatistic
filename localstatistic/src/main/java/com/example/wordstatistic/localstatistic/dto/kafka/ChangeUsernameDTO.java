@@ -1,9 +1,9 @@
 /**
  * Copyright 2024 Kiselev Oleg
  */
-package com.example.wordstatistic.user.dto.kafka;
+package com.example.wordstatistic.localstatistic.dto.kafka;
 
-import com.example.wordstatistic.user.util.kafka.KafkaDTOException;
+import com.example.wordstatistic.localstatistic.util.kafka.KafkaDTOException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 

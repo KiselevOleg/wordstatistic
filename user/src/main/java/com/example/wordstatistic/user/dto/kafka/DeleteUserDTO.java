@@ -1,3 +1,6 @@
+/**
+ * Copyright 2024 Kiselev Oleg
+ */
 package com.example.wordstatistic.user.dto.kafka;
 
 import com.example.wordstatistic.user.util.kafka.KafkaDTOException;
