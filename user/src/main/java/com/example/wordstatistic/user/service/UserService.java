@@ -138,11 +138,13 @@ public class UserService {
                 USER_NAME_PARAMETER
             )
         );
+        final String userId = userRepository.findByName(userDTO.name())
+            .map(User::getUuid).map(UUID::toString).orElse("");
         final Authentication authentication =
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
-            userDTO.name(),
-            userDTO.password()
-        ));
+                userId,
+                userDTO.password()
+            ));
         SecurityContextHolder.getContext().setAuthentication(authentication);
         final String accessToken = jwtTokenProvider.generateAccessToken(userDTO.name());
         final String refreshToken = jwtTokenProvider.generateRefreshToken(userDTO.name());
