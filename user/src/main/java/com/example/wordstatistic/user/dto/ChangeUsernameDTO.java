@@ -6,6 +6,7 @@ package com.example.wordstatistic.user.dto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import org.hibernate.validator.constraints.Length;
 import org.springframework.validation.annotation.Validated;
 
@@ -21,6 +22,7 @@ public record ChangeUsernameDTO(
     @Length(min = 1, max = 50) @NotBlank
     @JsonProperty("currentPassword") String currentPassword,
     @Schema(description = "a new username", example = "user123")
+    @Pattern(regexp = "^[a-zA-Z0-9_]+$", message = "incorrect value")
     @Length(min = 1, max = 50) @NotBlank
     @JsonProperty("newUsername") String newUsername
 ) { }

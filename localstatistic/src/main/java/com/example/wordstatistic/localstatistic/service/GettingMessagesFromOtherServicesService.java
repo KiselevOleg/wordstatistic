@@ -44,7 +44,7 @@ public class GettingMessagesFromOtherServicesService {
      * @throws KafkaDTOException an exception if it can not be executed
      * @throws JsonProcessingException an exception if it can not be executed
      */
-    @KafkaListener(topics = "text", groupId = "localstatistic-group", concurrency = "2")
+    @KafkaListener(topics = "changeUsername", groupId = "localstatistic-group", concurrency = "2")
     public void changeUsername(final @NotBlank String text) throws KafkaDTOException, JsonProcessingException {
         final ChangeUsernameDTO dto = ChangeUsernameDTO.fromJSON(text);
 
@@ -60,7 +60,7 @@ public class GettingMessagesFromOtherServicesService {
      * @throws KafkaDTOException an exception if it can not be executed
      * @throws JsonProcessingException an exception if it can not be executed
      */
-    @KafkaListener(topics = "text", groupId = "localstatistic-group", concurrency = "2")
+    @KafkaListener(topics = "deleteUser", groupId = "localstatistic-group", concurrency = "2")
     public void deleteUser(final @NotBlank String text) throws KafkaDTOException, JsonProcessingException {
         final DeleteUserDTO dto = DeleteUserDTO.fromJSON(text);
 

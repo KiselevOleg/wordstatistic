@@ -6,6 +6,8 @@ package com.example.wordstatistic.localstatistic.dto.kafka;
 import com.example.wordstatistic.localstatistic.util.kafka.KafkaDTOException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.validation.constraints.Pattern;
+import org.springframework.validation.annotation.Validated;
 
 import java.util.UUID;
 
@@ -14,8 +16,10 @@ import java.util.UUID;
  * @param userId a user's id
  * @param newUsername a username
  */
+@Validated
 public record ChangeUsernameDTO(
     UUID userId,
+    @Pattern(regexp = "^[a-zA-Z0-9_]+$", message = "incorrect value")
     String newUsername
 ) {
     /**

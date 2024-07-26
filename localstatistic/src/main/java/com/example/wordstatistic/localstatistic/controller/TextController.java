@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -83,6 +84,7 @@ public class TextController {
     @GetMapping(value = "/getAllTextsForTopic", produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getAllTextsForTopic(
         @Parameter(description = "a topic name", example = "ownTestTopic")
+        @Pattern(regexp = "^[a-zA-Z0-9_]+$", message = "incorrect value")
         final @RequestParam @NotBlank String topicName
     ) {
         try {
@@ -110,8 +112,10 @@ public class TextController {
     @GetMapping(value = "/getTextContent", produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getTextContent(
         @Parameter(description = "a topic name", example = "ownTestTopic")
+        @Pattern(regexp = "^[a-zA-Z0-9_]+$", message = "incorrect value")
         final @RequestParam @NotBlank String topicName,
         @Parameter(description = "a text name", example = "firstText")
+        @Pattern(regexp = "^[a-zA-Z0-9_]+$", message = "incorrect value")
         final @RequestParam @NotBlank String textName
     ) {
         try {

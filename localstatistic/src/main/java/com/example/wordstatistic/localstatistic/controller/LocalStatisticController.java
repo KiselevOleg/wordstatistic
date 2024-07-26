@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -88,6 +89,7 @@ public class LocalStatisticController {
     @GetMapping(value = "/getMostPopularWordsForTopic", produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getMostPopularWordsForTopic(
         @Parameter(description = "a topic name", example = "ownTestTopic")
+        @Pattern(regexp = "^[a-zA-Z0-9_]+$", message = "incorrect value")
         final @RequestParam @NotBlank String topicName,
         @Parameter(description = "count of words", example = "3")
         final @RequestParam @Min(1) Integer limit
@@ -116,8 +118,10 @@ public class LocalStatisticController {
     @GetMapping(value = "/getMostPopularWordsForText", produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getMostPopularWordsForText(
         @Parameter(description = "a topic name", example = "ownTestTopic")
+        @Pattern(regexp = "^[a-zA-Z0-9_]+$", message = "incorrect value")
         final @RequestParam @NotBlank String topicName,
         @Parameter(description = "a text name", example = "firstText")
+        @Pattern(regexp = "^[a-zA-Z0-9_]+$", message = "incorrect value")
         final @RequestParam @NotBlank String textName,
         @Parameter(description = "count of words", example = "3")
         final @RequestParam @Min(1) Integer limit
