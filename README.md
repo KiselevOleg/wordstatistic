@@ -346,6 +346,30 @@ clickhouse password
         "user.localhost:80/registry/refreshToken" \
         && printf '\n'
 
+#### change a username
+
+    curl -i -X PUT -H "Content-Type: application/json" \
+        -H "Authorization: Bearer {token}" \
+        -d '{"currentPassword": "test","newUsername": "haart_1024"}' \
+        "user.localhost:80/changeUser/changeUsername" \
+        && printf '\n'
+
+#### change a password
+
+    curl -i -X PUT -H "Content-Type: application/json" \
+        -H "Authorization: Bearer {token}" \
+        -d '{"currentPassword": "test","newPassword": "TestPassword"}' \
+        "user.localhost:80/changeUser/changePassword" \
+        && printf '\n'
+
+#### delete a user
+
+    curl -i -X DELETE -H "Content-Type: application/json" \
+        -H "Authorization: Bearer {token}" \
+        -d '{"currentPassword": "test"}' \
+        "user.localhost:80/changeUser/deleteUser" \
+        && printf '\n'
+
 # delete
 
 sudo docker compose down

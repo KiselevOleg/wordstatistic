@@ -30,4 +30,12 @@ public class KafkaTopicConfig {
     public NewTopic usingHistory() {
         return new NewTopic("usingHistory", 1, (short) 1);
     }
+    @Bean
+    public NewTopic changeUsername() {
+        return new NewTopic("changeUsername", 1, (short) 1);
+    }
+    @Bean
+    public NewTopic deleteUser() {
+        return new NewTopic("deleteUser", 1, (short) 1);
+    }
 }
