@@ -5,6 +5,7 @@ package com.example.wordstatistic.localstatistic.model;
 
 import com.example.wordstatistic.localstatistic.dto.TopicDTO;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Pattern;
 import lombok.*;
 import org.hibernate.validator.constraints.Length;
 import org.springframework.validation.annotation.Validated;
@@ -29,11 +30,13 @@ public class Topic {
     private Integer id;
     @Column(name = "user_id", nullable = false, unique = false)
     private UUID userId;
-    @Length(min = 1, max = 50)
     @Column(name = "user_name", length = 50, nullable = false, unique = false)
-    private String userName;
     @Length(min = 1, max = 50)
+    @Pattern(regexp = "^[a-zA-Z0-9_]+$", message = "incorrect value")
+    private String userName;
     @Column(name = "name", length = 50, nullable = false, unique = false)
+    @Pattern(regexp = "^[a-zA-Z0-9_]+$", message = "incorrect value")
+    @Length(min = 1, max = 50)
     private String name;
 
     /**

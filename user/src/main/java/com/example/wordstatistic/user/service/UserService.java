@@ -20,9 +20,6 @@ import com.example.wordstatistic.user.util.RestApiException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
@@ -138,12 +135,10 @@ public class UserService {
                 USER_NAME_PARAMETER
             )
         );
-        final Authentication authentication =
-            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
-            userDTO.name(),
-            userDTO.password()
-        ));
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+        final String userId = userRepository.findByName(userDTO.name())
+            .map(User::getUuid).map(UUID::toString).orElse("");
+        SecurityConfig.initSecurityContextHolder(authenticationManager, userId, userDTO.password());
+
         final String accessToken = jwtTokenProvider.generateAccessToken(userDTO.name());
         final String refreshToken = jwtTokenProvider.generateRefreshToken(userDTO.name());
 

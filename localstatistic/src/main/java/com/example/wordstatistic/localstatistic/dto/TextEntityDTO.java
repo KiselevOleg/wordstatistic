@@ -6,6 +6,7 @@ package com.example.wordstatistic.localstatistic.dto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import org.hibernate.validator.constraints.Length;
 import org.springframework.validation.annotation.Validated;
 
@@ -19,9 +20,11 @@ import org.springframework.validation.annotation.Validated;
 @Validated
 public record TextEntityDTO(
     @Schema(description = "a topic name", example = "ownTestTopic")
+    @Pattern(regexp = "^[a-zA-Z0-9_]+$", message = "incorrect value")
     @Length(min = 1, max = 50)
     @JsonProperty("topic") @NotBlank String topic,
     @Schema(description = "a text name", example = "firstText")
+    @Pattern(regexp = "^[a-zA-Z0-9_]+$", message = "incorrect value")
     @Length(min = 1, max = 50)
     @JsonProperty("name") @NotBlank String name,
     @Schema(description = "text content", example = "a test text")

@@ -3,7 +3,6 @@
  */
 package com.example.wordstatistic.user.client;
 
-
 import com.example.wordstatistic.user.model.remote.usingHistory.UsingHistoryRecord;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;

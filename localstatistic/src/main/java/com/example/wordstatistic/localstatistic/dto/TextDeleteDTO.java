@@ -1,6 +1,3 @@
-/**
- * Copyright 2024 Kiselev Oleg
- */
 package com.example.wordstatistic.localstatistic.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -11,14 +8,19 @@ import org.hibernate.validator.constraints.Length;
 import org.springframework.validation.annotation.Validated;
 
 /**
- * a topic dto for getting a topic list.
- * @param name a name of the topic
+ * an entity text for deleting.
+ * @param topic a topic name
+ * @param name a text name
  */
-@Schema(description = "an topic entity")
+@Schema(description = "an entity text for deleting")
 @Validated
-public record TopicDTO(
+public record TextDeleteDTO(
     @Schema(description = "a topic name", example = "ownTestTopic")
     @Pattern(regexp = "^[a-zA-Z0-9_]+$", message = "incorrect value")
-    @Length(min = 1, max = 50)
-    @JsonProperty("name") @NotBlank String name
+    @Length(min = 1, max = 50) @NotBlank
+    @JsonProperty("topic") String topic,
+    @Schema(description = "a text name", example = "text1")
+    @Pattern(regexp = "^[a-zA-Z0-9_]+$", message = "incorrect value")
+    @Length(min = 1, max = 50) @NotBlank
+    @JsonProperty("name") String name
 ) { }

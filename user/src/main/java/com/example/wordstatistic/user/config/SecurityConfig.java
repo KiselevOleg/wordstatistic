@@ -10,11 +10,14 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -27,6 +30,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableMethodSecurity
 @SuppressWarnings("PMD.MultipleStringLiterals")
 public class SecurityConfig {
+    private static String passwordSalt = "qweiu_+h=ao237rv8bO&$^RBO&  Q#*vDFQA^M3t ergdogf67!4#^g&EDYHNfgb3";
+
     private JwtAuthenticationEntryPoint authenticationEntryPoint;
     private JwtAuthenticationFilter authenticationFilter;
 
@@ -41,7 +46,19 @@ public class SecurityConfig {
 
     @Bean
     public static PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder(12);
+        return new CustomBCryptPasswordEncoder(12, passwordSalt);
+    }
+    public static void initSecurityContextHolder(
+        final AuthenticationManager authenticationManager,
+        final String userId,
+        final String rawPassword
+    ) {
+        final Authentication authentication =
+            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
+                userId,
+                rawPassword + passwordSalt
+            ));
+        SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 
     @Bean
@@ -72,6 +89,22 @@ public class SecurityConfig {
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
         return configuration.getAuthenticationManager();
+    }
+
+    private static class CustomBCryptPasswordEncoder extends BCryptPasswordEncoder {
+        private final String salt;
+        CustomBCryptPasswordEncoder(final Integer strenth, final String salt) {
+            super(strenth);
+            this.salt = salt;
+        }
+
+        /**
+         * Encode the raw password. Generally, a good encoding algorithm applies a
+         * SHA-1 or greater hash combined with an 8-byte or greater randomly generated salt.
+         */
+        public String encode(final CharSequence rawPawword) {
+            return super.encode(rawPawword.toString() + salt);
+        }
     }
 }
 

@@ -6,6 +6,7 @@ package com.example.wordstatistic.localstatistic.model;
 import com.example.wordstatistic.localstatistic.dto.TextEntityDTO;
 import com.example.wordstatistic.localstatistic.dto.TextListDTO;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Pattern;
 import lombok.*;
 import org.hibernate.validator.constraints.Length;
 import org.springframework.validation.annotation.Validated;
@@ -29,6 +30,7 @@ public class Text {
     @ManyToOne
     @JoinColumn(name = "topic", nullable = false, unique = false)
     private Topic topic;
+    @Pattern(regexp = "^[a-zA-Z0-9_]+$", message = "incorrect value")
     @Length(min = 1, max = 50)
     @Column(name = "name", length = 50, nullable = false, unique = false)
     private String name;

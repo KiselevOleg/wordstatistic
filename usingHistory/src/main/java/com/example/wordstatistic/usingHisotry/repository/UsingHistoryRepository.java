@@ -26,21 +26,14 @@ public class UsingHistoryRepository {
 
     @Autowired
     public UsingHistoryRepository() {
-        final String url = "jdbc:ch://usinghistory-clickhouse:8123/usingHistory"; //port 8123 by default
-
-        final Properties properties = new Properties();
-
-        try {
-            final ClickHouseDataSource dataSource = new ClickHouseDataSource(url, properties);
-            conn = dataSource.getConnection("haart", "test");
-            stmt = conn.createStatement();
-        } catch (SQLException e) {
-            final Logger logger = LoggerFactory.getLogger(UsingHistoryRepository.class);
-            logger.error("!!!!!!!!!!!!!!!!!!!!!!!!{}", e.getMessage());
-        }
+        init();
     }
 
     public void addRecord(final UsingHistoryRecord usingHistoryRecord) throws SQLException {
+        if (stmt == null) {
+            init();
+        }
+
         try {
             if (!existsTable(usingHistoryRecord)) {
                 createTable(usingHistoryRecord);
@@ -205,6 +198,21 @@ public class UsingHistoryRepository {
     private void createTableQueryAddColumns(final StringBuilder query, final String type, final Set<String> names) {
         for (String name : names) {
             query.append(name).append(" ").append(type).append(",\n");
+        }
+    }
+
+    private void init() {
+        final String url = "jdbc:ch://usinghistory-clickhouse:8123/usingHistory"; //port 8123 by default
+
+        final Properties properties = new Properties();
+
+        try {
+            final ClickHouseDataSource dataSource = new ClickHouseDataSource(url, properties);
+            conn = dataSource.getConnection("haart", "test");
+            stmt = conn.createStatement();
+        } catch (SQLException e) {
+            final Logger logger = LoggerFactory.getLogger(UsingHistoryRepository.class);
+            logger.error("!!!!!!!!!!!!!!!!!!!!!!!!{}", e.getMessage());
         }
     }
 }
