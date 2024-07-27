@@ -14,9 +14,6 @@ import com.example.wordstatistic.user.util.RestApiException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
@@ -67,12 +64,7 @@ public class ChangeUserService {
         final String currentPassword,
         final String newPassword
     ) throws RestApiException {
-        final Authentication authentication =
-            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
-                userId,
-                currentPassword
-            ));
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+        SecurityConfig.initSecurityContextHolder(authenticationManager, userId.toString(), currentPassword);
         final User user = userRepository.findByUuid(userId).orElseThrow(() -> USER_NOT_FOUND_EXCEPTION);
 
         user.setPassword(SecurityConfig.passwordEncoder().encode(newPassword));
@@ -100,12 +92,7 @@ public class ChangeUserService {
         final String currentPassword,
         final String newUsername
     ) throws RestApiException {
-        final Authentication authentication =
-            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
-                userId,
-                currentPassword
-            ));
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+        SecurityConfig.initSecurityContextHolder(authenticationManager, userId.toString(), currentPassword);
         if (userRepository.existsByName(newUsername)) {
             throw USER_NAME_FOUND_EXCEPTION;
         }
@@ -139,12 +126,7 @@ public class ChangeUserService {
         final UUID userId,
         final String currentPassword
     ) throws RestApiException {
-        final Authentication authentication =
-            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
-                userId,
-                currentPassword
-            ));
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+        SecurityConfig.initSecurityContextHolder(authenticationManager, userId.toString(), currentPassword);
         final User user = userRepository.findByUuid(userId).orElseThrow(() -> USER_NOT_FOUND_EXCEPTION);
 
         userRepository.delete(user);
