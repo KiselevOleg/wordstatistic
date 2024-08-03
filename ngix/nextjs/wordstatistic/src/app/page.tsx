@@ -1,95 +1,147 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+'use client'
 
-export default function Home() {
-  return (
-    <main className={styles.main}>
-      <div className={styles.description}>
-        <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>src/app/page.tsx</code>
-        </p>
-        <div>
-          <a
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className={styles.vercelLogo}
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
+import React from "react";
+import Styles from "./page.module.css";
+import {getMostPopularWords, Word} from "./../api/globalstatisticAPI";
 
-      <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
+interface PropsPageType {
 
-      <div className={styles.grid}>
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p>Find in-depth information about Next.js features and API.</p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Learn <span>-&gt;</span>
-          </h2>
-          <p>Learn about Next.js in an interactive course with&nbsp;quizzes!</p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p>Explore starter templates for Next.js.</p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
-  );
 }
+interface StatePageType {
+
+}
+export default class Page extends React.Component<PropsPageType, StatePageType> {
+  constructor(props: PropsPageType) {
+    super(props);
+
+    this.state = {
+
+    };
+  }
+
+  render():React.ReactNode {
+    return <>
+      <h2 className="global_mainHeader">List of the most popular words in all texts were ever loaded</h2>
+      <ListOfMostPopularWords />
+    </>;
+  }
+}
+
+interface PropsListOfMostPopularWordsType {
+  preload?: boolean
+}
+interface StateListOfMostPopularWordsType {
+  words: Word[],
+  wordsCount: number,
+  preload: boolean
+}
+class ListOfMostPopularWords
+  extends React.Component<PropsListOfMostPopularWordsType, StateListOfMostPopularWordsType> {
+    constructor(props: PropsListOfMostPopularWordsType) {
+      super(props);
+      const {preload} = props;
+
+      this.state = {
+        words: [],
+        wordsCount: 5,
+        preload: preload??true
+      };
+    }
+
+    countWordsInputRef:React.RefObject<HTMLInputElement> = React.createRef<HTMLInputElement>();
+
+    componentDidMount(): void {
+      const {preload} = this.state;
+      if (!preload) return;
+
+      let limitlast: number = +(
+        localStorage.getItem("limitlast")??
+        (():string => { 
+          localStorage.setItem("limitlast", '5');
+          return '5'; 
+        })()
+      );
+      this.countWordsInputRef.current!.value=limitlast.toString();
+      this.loadNewWordsListButtonClickHandle();
+    }
+
+    loadNewWordsListButtonClickHandle = ():void => {
+      const limit:number = +this.countWordsInputRef.current!.value;
+      localStorage.setItem("limitlast", limit.toString());
+      if(limit<=0) return;
+      getMostPopularWords(limit)
+        .then(res => this.setState({words: res, wordsCount: limit}))
+        .catch(e => e);
+    }
+
+    countWordsInputOnChangeHandle = ({target: value}: React.ChangeEvent<HTMLInputElement>):void => {
+      let limit:number = +value.value;
+      limit=Math.min(Math.max(limit,1),10000);
+  
+      this.setState({wordsCount: limit});
+    }
+
+    render():React.ReactNode {
+      const {words, wordsCount} = this.state;
+      console.log("render "+wordsCount);
+      let w:React.ReactNode[]=[];
+      for(let i:number=0;i<words.length;++i) {
+        w[i]=<li key={words[i].name} className={Styles.wordLi}>
+          <div className={Styles.word}>
+            {words[i].name}: 
+            <span className={Styles.wordCount}>{words[i].count}</span>
+          </div>
+        </li>;
+      }
+
+      return <>
+        <input
+          ref={this.countWordsInputRef}
+          onChange={this.countWordsInputOnChangeHandle}
+          type="number" value={wordsCount}
+        />
+        {/*<Input referenceValue={this.countWordsInputRef} startValue={wordsCount} />*/}
+        <button onClick={this.loadNewWordsListButtonClickHandle}>load a new list</button>
+        <ol>{w}</ol>
+      </>;
+    }
+}
+
+/*interface PropsInputType {
+  referenceValue: React.RefObject<HTMLInputElement>,
+  startValue: number
+}
+interface StateInputType {
+  ref: React.RefObject<HTMLInputElement>,
+  value: number
+}
+class Input extends React.Component<PropsInputType, StateInputType> {
+  constructor(props: PropsInputType) {
+    super(props);
+    const {referenceValue, startValue} = props;
+
+    this.state = {
+      ref: referenceValue,
+      value: startValue
+    };
+    console.log("render in creation "+startValue);
+  }
+
+  countWordsInputOnChangeHandle = ({target: value}: React.ChangeEvent<HTMLInputElement>):void => {
+    let limit:number = +value.value;
+    limit=Math.min(Math.max(limit,1),10000);
+
+    this.setState({value: limit});
+  }
+
+  render():React.ReactNode {
+    const {value, ref} = this.state;
+    console.log("render in "+value);
+
+    return <input
+      ref={ref}
+      onChange={this.countWordsInputOnChangeHandle}
+      type="number" value={value}
+    />;
+  }
+}*/

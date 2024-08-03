@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "lintbuildstart": "next lint && next build && next start"
   },
   "dependencies": {
     "react": "^18",
