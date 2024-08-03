@@ -19,10 +19,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -38,6 +35,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
     description = "a controller for getting statistic for local user's texts"
 )
 @Validated
+@CrossOrigin(maxAge = 60L, origins = {"http://localhost", "http://localhost:80", "http://localhost:3000"})
 @SuppressWarnings("PMD.ReturnCount")
 public class LocalStatisticController {
     public static final String VIEW_TEXT_PERMISSION = "viewText";

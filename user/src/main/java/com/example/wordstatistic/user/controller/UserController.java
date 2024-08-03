@@ -26,6 +26,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 @RestController
 @RequestMapping("/registry")
 @Tag(name = "user controller", description = "a controller for getting and updating jwt tokens")
+@CrossOrigin(maxAge = 60L, origins = {"http://localhost", "http://localhost:80", "http://localhost:3000"})
 @Validated
 public class UserController {
     private final UserService userService;
