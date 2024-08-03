@@ -1,0 +1,53 @@
+.mainTitle {
+  display: inline-block;
+  color: cadetblue;
+  font-size: 1.5rem;
+  font-style: italic;
+  margin: 0;
+  border: 0;
+  padding: 0;
+  width:30vw;
+}
+
+.emptySpace {
+  display: inline-block;
+  width: 50vw;
+  height: 5vmin;
+}
+
+.authorization {
+  display: inline-block;
+  margin-left: 0vw; 
+  margin-right: 1vw;
+  width: 15vw;
+  text-align: right;
+}
+.authorization+* {
+  align-items: right;
+}
+.authorization>a:link { 
+  text-decoration: none; 
+} 
+.authorization>a:visited { 
+  text-decoration: none; 
+} 
+.authorization>a:hover { 
+  text-decoration: none; 
+} 
+.authorization>a:active { 
+  text-decoration: none; 
+}
+.authorizationUserName {
+  color: cadetblue;
+  font-size: 1rem;
+  font-style: italic;
+  text-decoration: none;
+  text-align: right;
+}
+.authorizationSignIn {
+  color: blue;
+  font-size: 1.3rem;
+  font-style: normal;
+  text-decoration: none;
+  text-align: right;
+}

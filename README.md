@@ -22,11 +22,45 @@ sudo docker build \
     --build-arg JAR_FILE="./build/libs/usingHistory-1.0.0.jar" \
     -t wordstatistic_usinghistory:1.0.0 ./usingHistory
 
+
+
+sudo docker build \
+    -t wordstatistic_ngix:1.0.0 ./ngix
+sudo docker build \
+    -t wordstatistic_nextjs_frontend:1.0.0 ./ngix/nextjs
+
+
+
+
 sudo docker compose up -d
 
 # description
 
-Backend for analysis count of words in texts. It supports only the Latin alphabet.
+A website for analysis count of words in texts. It supports only the Latin alphabet.
+
+## frontend
+
+A service nextjs-frontend contains a nextjs frontend project with all frontend.
+
+All connections are listened in a ngix server
+that separates requests into a frontend part and
+into a backend cluster (with a gategay based on traefik).
+
+All setting of host names can be found in /ngix/ngix.conf
+
+example
+
+    server {
+        listen 8080;
+        server_name localhost;
+
+        location / {
+            proxy_set_header Host traefik;
+            proxy_pass http://traefik:8080;
+        }
+    }
+
+## backend
 
 ### globalstatistic
 
@@ -210,6 +244,14 @@ clickhouse password
             - CLICKHOUSE_PASSWORD=test
 
 # use
+
+## frontend
+
+### nextjs-frontend
+
+    http://localhost:80/
+
+## backend
 
 ### globalstatistic service
 
