@@ -28,6 +28,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 @RestController
 @RequestMapping("/changeUser")
 @Tag(name = "change user data controller", description = "a controller for changing user data")
+@CrossOrigin(maxAge = 60L, origins = {"http://localhost", "http://localhost:80", "http://localhost:3000"})
 @Validated
 public class ChangeUserController {
     private final ChangeUserService changeUserService;

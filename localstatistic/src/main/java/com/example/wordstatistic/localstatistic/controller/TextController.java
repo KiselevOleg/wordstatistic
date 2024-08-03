@@ -37,6 +37,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
     description = "a controller for add new texts"
 )
 @Validated
+@CrossOrigin(maxAge = 60L, origins = {"http://localhost", "http://localhost:80", "http://localhost:3000"})
 @SuppressWarnings("PMD.ClassFanOutComplexity")
 public class TextController {
     public static final String VIEW_TEXT_PERMISSION = "viewText";
