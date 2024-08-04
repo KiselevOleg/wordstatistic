@@ -51,13 +51,13 @@ export function signUp(userName:string, userPassword: string):Promise<boolean> {
     }
   ).then(res => res.status==200).catch(e => e);
 }
-export function signIn(userName:string, userPassword: string):Promise<boolean> {
+export function signIn(username:string, userPassword: string):Promise<boolean> {
   return fetch(
     `${process.env.NEXT_PUBLIC_API_USER_HOST}/registry/signIn`,
     {
       method: 'post',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({name: userName, password: userPassword})
+      body: JSON.stringify({name: username, password: userPassword})
     }
   ).then(res => {
     if(res.status==200) {
@@ -66,9 +66,10 @@ export function signIn(userName:string, userPassword: string):Promise<boolean> {
   }).then(res => {
     if(res===false) return false;
     else {
-      if(!res||!res.access||!res.refresh) return false;
-      const res_:Tokens = {access: res.access, refresh: res.refresh};
-      return res_;
+      if(!res||!res.accessToken||!res.refreshToken) return false;
+      const res_:Tokens = {access: res.accessToken, refresh: res.refreshToken};
+      saveTokens(res_);
+      return true;
     }
   }).catch(e => e);
 }
