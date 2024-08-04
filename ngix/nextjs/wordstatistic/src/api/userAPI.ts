@@ -1,6 +1,44 @@
-export interface Tokens {
+interface Tokens {
   access: string,
   refresh: string
+}
+const accessTokenLocalstorageName:string="accessToken";
+const refreshTokenLocalstorageName:string="refreshToken";
+function saveTokens(tokens: Tokens):void {
+  localStorage.setItem(accessTokenLocalstorageName, tokens.access);
+  localStorage.setItem(refreshTokenLocalstorageName, tokens.refresh);
+}
+export function deleteTokens():void {
+  localStorage.removeItem(accessTokenLocalstorageName);
+  localStorage.removeItem(refreshTokenLocalstorageName);
+}
+export function validTokens():Promise<boolean> {
+  const accessToken:string = localStorage.getItem(accessTokenLocalstorageName)??"";
+  const refreshToken:string = localStorage.getItem(refreshTokenLocalstorageName)??"";
+  return refreshTokens(accessToken, refreshToken).then(res => {
+    if(res===false) {
+      return false;
+    }
+    saveTokens(res);
+    return true;
+  });
+}
+function getTokens():Tokens|null {
+  const accessToken:string|null=localStorage.getItem(accessTokenLocalstorageName);
+  const refreshToken:string|null=localStorage.getItem(refreshTokenLocalstorageName);
+  if(accessToken===null||refreshToken===null) return null;
+  return {access: accessToken, refresh: refreshToken};
+}
+export interface Authorization {
+  username: string,
+  permissions: string[]
+}
+export function getTokenInformation():Authorization|null {
+  const tokens:Tokens|null=getTokens();
+  if (tokens===null) return null;
+  const base64Url:string = tokens.access.split('.')[1];
+  const base64:string = base64Url.replace('-', '+').replace('_', '/');
+  return JSON.parse(window.atob(base64));
 }
 
 export function signUp(userName:string, userPassword: string):Promise<boolean> {
@@ -13,8 +51,7 @@ export function signUp(userName:string, userPassword: string):Promise<boolean> {
     }
   ).then(res => res.status==200).catch(e => e);
 }
-
-export function signIn(userName:string, userPassword: string):Promise<Tokens|false> {
+export function signIn(userName:string, userPassword: string):Promise<boolean> {
   return fetch(
     `${process.env.NEXT_PUBLIC_API_USER_HOST}/registry/signIn`,
     {
@@ -35,7 +72,7 @@ export function signIn(userName:string, userPassword: string):Promise<Tokens|fal
     }
   }).catch(e => e);
 }
-export function refreshTokens(accessToken:string, refreshToken: string):Promise<Tokens|false> {
+function refreshTokens(accessToken:string, refreshToken: string):Promise<Tokens|false> {
   return fetch(
     `${process.env.NEXT_PUBLIC_API_USER_HOST}/registry/refreshToken`,
     {
@@ -52,8 +89,8 @@ export function refreshTokens(accessToken:string, refreshToken: string):Promise<
   }).then(res => {
     if(res===false) return false;
     else {
-      if(!res||!res.access||!res.refresh) return false;
-      const res_:Tokens = {access: res.access, refresh: res.refresh};
+      if(!res||!res.accessToken||!res.refreshToken) return false;
+      const res_:Tokens = {access: res.accessToken, refresh: res.refreshToken};
       return res_;
     }
   }).catch(e => e);
