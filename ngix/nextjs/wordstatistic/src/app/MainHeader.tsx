@@ -4,14 +4,8 @@ import React from "react";
 import Link from 'next/link'
 import Styles from "./layout.module.css";
 
-interface PropsMainHeaderType {
-
-}
-interface StateMainHeaderType {
-
-}
-export default class MainHeader extends React.Component<PropsMainHeaderType, StateMainHeaderType> {
-  constructor(props: PropsMainHeaderType) {
+export default class MainHeader extends React.Component<unknown, unknown> {
+  constructor(props: unknown) {
     super(props);
 
     this.state = {};
@@ -26,14 +20,9 @@ export default class MainHeader extends React.Component<PropsMainHeaderType, Sta
   }
 }
 
-interface PropsMainSiteTitleType {
 
-}
-interface StateMainSiteTitleType {
-
-}
-class MainSiteTitle extends React.Component<PropsMainSiteTitleType, StateMainSiteTitleType> {
-  constructor(props: PropsMainSiteTitleType) {
+class MainSiteTitle extends React.Component<unknown, unknown> {
+  constructor(props: unknown) {
     super(props);
 
     this.state = {};
@@ -44,14 +33,12 @@ class MainSiteTitle extends React.Component<PropsMainSiteTitleType, StateMainSit
   }
 }
 
-interface PropsAuthorizationType {
 
-}
 interface StateAuthorizationType {
   userName?: string
 }
-class Authorization extends React.Component<PropsAuthorizationType, StateAuthorizationType> {
-  constructor(props: PropsAuthorizationType) {
+class Authorization extends React.Component<unknown, StateAuthorizationType> {
+  constructor(props: unknown) {
     super(props);
 
     this.state = {};

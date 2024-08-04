@@ -4,14 +4,8 @@ import React from "react";
 import Styles from "./page.module.css";
 import {getMostPopularWords, Word} from "./../api/globalstatisticAPI";
 
-interface PropsPageType {
-
-}
-interface StatePageType {
-
-}
-export default class Page extends React.Component<PropsPageType, StatePageType> {
-  constructor(props: PropsPageType) {
+export default class Page extends React.Component<unknown, unknown> {
+  constructor(props: unknown) {
     super(props);
 
     this.state = {
@@ -54,7 +48,7 @@ class ListOfMostPopularWords
       const {preload} = this.state;
       if (!preload) return;
 
-      let limitlast: number = +(
+      const limitlast: number = +(
         localStorage.getItem("limitlast")??
         (():string => { 
           localStorage.setItem("limitlast", '5');
@@ -83,8 +77,8 @@ class ListOfMostPopularWords
 
     render():React.ReactNode {
       const {words, wordsCount} = this.state;
-      console.log("render "+wordsCount);
-      let w:React.ReactNode[]=[];
+      //console.log("render "+wordsCount);
+      const w:React.ReactNode[]=[];
       for(let i:number=0;i<words.length;++i) {
         w[i]=<li key={words[i].name} className={Styles.wordLi}>
           <div className={Styles.word}>
