@@ -4,7 +4,7 @@ import React from "react";
 import Link from "next/link";
 import Styles from "./page.module.css";
 
-import {signIn, signUp} from "./../../api/userAPI";
+import {signIn, validTokens} from "../../../api/userAPI";
 
 export default class Page extends React.Component<unknown, unknown> {
   constructor(props: unknown) {
@@ -23,10 +23,10 @@ export default class Page extends React.Component<unknown, unknown> {
   }
 }
 
-interface StateSignUpFormType {
+interface StateSignInFormType {
   errorMessage?:string
 }
-class SignInForm extends React.Component<unknown, StateSignUpFormType> {
+class SignInForm extends React.Component<unknown, StateSignInFormType> {
   constructor(props: unknown) {
     super(props);
 
@@ -38,7 +38,7 @@ class SignInForm extends React.Component<unknown, StateSignUpFormType> {
   usernameInputRef:React.RefObject<HTMLInputElement> = React.createRef<HTMLInputElement>();
   passwordInputRef:React.RefObject<HTMLInputElement> = React.createRef<HTMLInputElement>();
 
-  signUpButtonClickHandle = ():void => {
+  signInButtonClickHandle = ():void => {
     if (!this.usernameInputRef.current?.checkValidity()) {
       this.setState({
         errorMessage: 
@@ -54,16 +54,11 @@ class SignInForm extends React.Component<unknown, StateSignUpFormType> {
     const username:string=this.usernameInputRef.current?.value??'';
     const password:string=this.passwordInputRef.current?.value??'';
 
-    signUp(username, password).then((res) => {
-      if(res===true) {
-        return signIn(username, password);
-      } else {
-        this.setState({errorMessage: "username or password is incorrect or this username already exists"});
-        return false;
-      }
-    }).then(res => {
+    signIn(username, password).then((res) => {
       if(res===true) {
         window.location.replace("/");
+      } else {
+        this.setState({errorMessage: "username or password is incorrect"});
       }
     });
   }
@@ -72,7 +67,7 @@ class SignInForm extends React.Component<unknown, StateSignUpFormType> {
     const {errorMessage}=this.state;
 
     return <>
-      <h3>sign up</h3>
+      <h3>sign in</h3>
       <label>
         <input ref={this.usernameInputRef} type="text" placeholder="username" 
           required pattern="[A-Za-z0-9_]{1,30}"/>
@@ -82,32 +77,64 @@ class SignInForm extends React.Component<unknown, StateSignUpFormType> {
           required minLength={4} maxLength={50} /><br />
       </label>
       <p className={Styles.errorMessage}>{errorMessage}</p>
-      <button type="submit" onClick={this.signUpButtonClickHandle}>sign up</button>
+      <button type="submit" onClick={this.signInButtonClickHandle}>sign in</button>
     </>;
   }
 }
 
-class ChangeRegistrationPage extends React.Component<unknown, unknown> {
+interface StateChangeRegistrationPageType {
+  auth:boolean
+}
+class ChangeRegistrationPage extends React.Component<unknown, StateChangeRegistrationPageType> {
   constructor(props: unknown) {
     super(props);
 
     this.state = {
-
+      auth: false
     };
   }
 
+  componentDidMount(): void {
+    if(!validTokens()) return;
+
+    this.setState({auth: true});
+  }
+
   render():React.ReactNode {
+    const {auth}=this.state;
+
     return <>
-      <p 
-        className={`${Styles.changeRegistrationPageLink} ${Styles.changeRegistrationPageLinkFirst}`}
-      >
-        <Link href="/signIn">sign in</Link>
-      </p>
-      <p 
-        className={`${Styles.changeRegistrationPageLink} ${Styles.changeRegistrationPageLinkNotFirst}`}
-      >
-        <Link href="/">main page</Link>
-      </p>
+    <p 
+      className={`${Styles.changeRegistrationPageLink} ${Styles.changeRegistrationPageLinkFirst}`}
+    >
+      <Link href="/auth/signUp">sign up</Link>
+    </p>
+    {auth&&
+    <p 
+      className={`${Styles.changeRegistrationPageLink} ${Styles.changeRegistrationPageLinkNotFirst}`}
+    >
+      <Link href="/auth/changeUsername">change username</Link>
+    </p>
+    }
+    {auth&&
+    <p 
+      className={`${Styles.changeRegistrationPageLink} ${Styles.changeRegistrationPageLinkNotFirst}`}
+    >
+      <Link href="/auth/changePassword">change password</Link>
+    </p>
+    }
+    {auth&&
+    <p 
+      className={`${Styles.changeRegistrationPageLink} ${Styles.changeRegistrationPageLinkNotFirst}`}
+    >
+      <Link href="/auth/deleteUser">delete this account</Link>
+    </p>
+    }
+    <p 
+      className={`${Styles.changeRegistrationPageLink} ${Styles.changeRegistrationPageLinkNotFirst}`}
+    >
+      <Link href="/">main page</Link>
+    </p>
     </>;
   }
 }

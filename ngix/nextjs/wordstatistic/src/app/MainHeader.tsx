@@ -20,12 +20,11 @@ export default class MainHeader extends React.Component<unknown, StateMainHeader
   }
 
   componentDidMount(): void {
-    validTokens().then(res => {
-      if(res===false) return;
-      const {username, permissions}=getTokenInformation()??{username: null, permissions: null};
-      if(username===null) return;
-      this.setState(() => this.setState({username: username, permissions: permissions}));
-    }).catch(e=>e);
+    if(!validTokens()) return;
+    
+    const {username, permissions}=getTokenInformation()??{username: null, permissions: null};
+    if(username===null) return;
+    this.setState(() => this.setState({username: username, permissions: permissions}));
   }
 
   render():React.ReactNode {
@@ -143,7 +142,7 @@ class Authorization extends React.Component<PropsAuthorizationType, StateAuthori
   render():React.ReactNode {
     const {username}=this.state;
     return <div className={Styles.authorization}>
-      <Link href="/signIn">
+      <Link href="/auth/signIn">
         <span className={username?Styles.authorizationUserName:Styles.authorizationSignIn}>
           {username??"sign in"}
         </span>
