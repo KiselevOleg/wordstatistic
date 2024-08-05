@@ -1,3 +1,5 @@
+import { getTokens } from "./userAPI";
+
 export interface Word {
   name: string,
   count: number
@@ -13,7 +15,9 @@ export function getMostPopularWords(limit: number):Promise<Word[]> {
   ).then(res => res.json()).catch(e => e);
 }
 
-export function addText(accessToken: string, text: string):Promise<boolean> {
+export function addText(text: string):Promise<boolean> {
+  const {access: accessToken}=getTokens()??{access: ""};
+  if (!accessToken) return new Promise(() => {return false;});
   return fetch(
     `${process.env.NEXT_PUBLIC_API_GLOBALSTATISTIC_HOST}/globalStatistic/addText`,
     {

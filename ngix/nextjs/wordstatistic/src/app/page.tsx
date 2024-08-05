@@ -2,21 +2,74 @@
 
 import React from "react";
 import Styles from "./page.module.css";
-import {getMostPopularWords, Word} from "./../api/globalstatisticAPI";
+import {getMostPopularWords, Word, addText} from "./../api/globalstatisticAPI";
+import { validTokens, getTokenInformation } from "@/api/userAPI";
 
-export default class Page extends React.Component<unknown, unknown> {
+interface StatePageType {
+  auth: boolean
+}
+export default class Page extends React.Component<unknown, StatePageType> {
   constructor(props: unknown) {
     super(props);
 
     this.state = {
-
+      auth: false
     };
   }
 
+  componentDidMount(): void {
+    if(validTokens()&&getTokenInformation()?.permissions.includes("addTextToGlobal")) {
+      this.setState({auth:true});
+    }
+  }
+
   render():React.ReactNode {
+    const {auth}=this.state;
     return <>
+      {auth?<AddGlobalText />:<></>}
       <h2 className="global_mainHeader">List of the most popular words in all texts were ever loaded</h2>
       <ListOfMostPopularWords />
+    </>;
+  }
+}
+
+interface StateAddGlobalTextType {
+  statusSendingMessage: string|null
+}
+class AddGlobalText extends React.Component<unknown, StateAddGlobalTextType> {
+  constructor(props: unknown) {
+    super(props);
+
+    this.state = {
+      statusSendingMessage: null
+    };
+  }
+
+  globalTextTextAreaRef:React.RefObject<HTMLTextAreaElement>=React.createRef<HTMLTextAreaElement>();
+  sendGlobalTextButtonHandle = ():void => {
+    const text:string|undefined = this.globalTextTextAreaRef.current?.value;
+    if(!text) {
+      this.setState({statusSendingMessage: "empty text error"});
+      return;
+    }
+    if(text===undefined) return;
+
+    addText(text).then(res=> {
+      if(res===false) {
+        this.setState({statusSendingMessage: "sending error"});
+        return;
+      }
+      this.globalTextTextAreaRef.current?.setAttribute("value", "");
+      this.setState({statusSendingMessage: "sending error"});
+    });
+  }
+
+  render():React.ReactNode {
+    const{statusSendingMessage}=this.state;
+    return <>
+      <textarea ref={this.globalTextTextAreaRef} placeholder="text"></textarea><br />
+      {(statusSendingMessage!==null)?<><span>{statusSendingMessage}</span><br /></>:<></>}
+      <button onClick={this.sendGlobalTextButtonHandle}>send</button>
     </>;
   }
 }

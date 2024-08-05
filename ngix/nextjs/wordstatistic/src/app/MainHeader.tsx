@@ -45,7 +45,7 @@ class MainSiteTitle extends React.Component<unknown, unknown> {
   }
 
   render():React.ReactNode {
-    return <span className={Styles.mainTitle}>WordStatistic</span>;
+    return <span className={Styles.mainTitle}><Link href="/">WordStatistic</Link></span>;
   }
 }
 
