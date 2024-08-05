@@ -28,6 +28,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
  * @author Kiselev Oleg
  */
 @RestController
+@CrossOrigin(maxAge = 60L, origins = {"http://localhost", "http://localhost:80", "http://localhost:3000"})
 @RequestMapping("globalStatistic")
 @Tag(
     name = "global statistic controller",
@@ -53,7 +54,6 @@ public class GlobalStatistic {
         summary = "get most popular words",
         description = "get a list of most popular words in all added texts"
     )
-    @CrossOrigin(maxAge = 60L, origins = {"http://localhost", "http://localhost:80", "http://localhost:3000"})
     @GetMapping(value = "/getMostPopularWords", produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<List<WordDTO>> getMostPopularWords(
         @Parameter(description = "count of words", example = "3")

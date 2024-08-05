@@ -34,14 +34,16 @@ export default class Page extends React.Component<unknown, StatePageType> {
 }
 
 interface StateAddGlobalTextType {
-  statusSendingMessage: string|null
+  statusSendingMessage: string|null,
+  globalText:string
 }
 class AddGlobalText extends React.Component<unknown, StateAddGlobalTextType> {
   constructor(props: unknown) {
     super(props);
 
     this.state = {
-      statusSendingMessage: null
+      statusSendingMessage: null,
+      globalText:""
     };
   }
 
@@ -59,15 +61,19 @@ class AddGlobalText extends React.Component<unknown, StateAddGlobalTextType> {
         this.setState({statusSendingMessage: "sending error"});
         return;
       }
-      this.globalTextTextAreaRef.current?.setAttribute("value", "");
-      this.setState({statusSendingMessage: "sending error"});
+      this.setState({statusSendingMessage: "sending success", globalText: ""});
     });
   }
 
+  globalTextAreaOnChangeHandle = ({target: value}: React.ChangeEvent<HTMLTextAreaElement>):void => {
+    this.setState({globalText: value.value});
+  }
+
   render():React.ReactNode {
-    const{statusSendingMessage}=this.state;
+    const{statusSendingMessage, globalText}=this.state;
     return <>
-      <textarea ref={this.globalTextTextAreaRef} placeholder="text"></textarea><br />
+      <textarea ref={this.globalTextTextAreaRef} onChange={this.globalTextAreaOnChangeHandle} 
+        placeholder="text" value={globalText}></textarea><br />
       {(statusSendingMessage!==null)?<><span>{statusSendingMessage}</span><br /></>:<></>}
       <button onClick={this.sendGlobalTextButtonHandle}>send</button>
     </>;
