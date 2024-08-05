@@ -4,7 +4,7 @@ import React from "react";
 import Link from "next/link";
 import Styles from "./page.module.css";
 
-import {signIn, validTokens} from "../../../api/userAPI";
+import {signIn, validTokens, deleteTokens} from "../../../api/userAPI";
 
 export default class Page extends React.Component<unknown, unknown> {
   constructor(props: unknown) {
@@ -128,6 +128,13 @@ class ChangeRegistrationPage extends React.Component<unknown, StateChangeRegistr
       className={`${Styles.changeRegistrationPageLink} ${Styles.changeRegistrationPageLinkNotFirst}`}
     >
       <Link href="/auth/deleteUser">delete this account</Link>
+    </p>
+    }
+    {auth&&
+    <p 
+      className={`${Styles.changeRegistrationPageLink} ${Styles.changeRegistrationPageLinkNotFirst}`}
+    >
+      <Link href="/" onClick={() => {deleteTokens(); window.location.reload();}}>logout</Link>
     </p>
     }
     <p 
