@@ -104,7 +104,7 @@ export function updateText(
     topicName:string, 
     oldTextName:string, 
     newTextName:string, 
-    newContent:string|undefined
+    newContent:string|null
 ):Promise<boolean> {
     const {access: accessToken}=getTokens()??{access: ""};
     return fetch(
@@ -119,7 +119,7 @@ export function updateText(
             topic: topicName, 
             newName: newTextName, 
             oldName: oldTextName, 
-            text: newContent
+            text: newContent??undefined
         })
         }
       ).then(res => res.status==200).catch(e => e);

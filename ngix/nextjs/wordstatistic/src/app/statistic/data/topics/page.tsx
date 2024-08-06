@@ -31,8 +31,8 @@ export default class Page extends React.Component<unknown , unknown> {
 }
 
 interface StateTopicListType {
-  topics:Topic[],
-  selectedToChangeTopics: Map<string,{newName:string, errorMessage:string}>,
+  topics:Topic[];
+  selectedToChangeTopics: Map<string,{newName:string, errorMessage:string}>;
 }
 class TopicList extends React.Component<unknown,StateTopicListType> {
   constructor(props: unknown) {
@@ -118,7 +118,7 @@ class TopicList extends React.Component<unknown,StateTopicListType> {
     const topics_:React.ReactNode[]=[];
     for(let i:number=0;i<topics.length;++i) {
       topics_[i]=<li key={topics[i].name}>
-        <Link href="/statistic/data/topic/topic1/texts"><span>{topics[i].name}</span></Link>
+        <Link href={`/statistic/data/topic/${topics[i].name}/texts`}><span>{topics[i].name}</span></Link>
         <button onClick={() => this.topicChangeButtonClickHandle(topics[i].name)} 
           className={Styles.manipulationButton} title="change">=</button>
         {
@@ -150,8 +150,8 @@ class TopicList extends React.Component<unknown,StateTopicListType> {
 }
 
 interface StateAddNewTopicsFormType {
-  topicNameInput:string,
-  statusMessage:string|null
+  topicNameInput:string;
+  statusMessage:string|null;
 }
 class AddNewTopicsForm extends React.Component<unknown,StateAddNewTopicsFormType> {
   constructor(props: unknown) {
