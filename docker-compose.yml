@@ -7,6 +7,23 @@ volumes:
     pg_data:
 
 services:
+    ngix:
+        image: wordstatistic_ngix:1.0.0
+        container_name: ngix
+        restart: unless-stopped
+        ports:
+            - 80:80
+            - 8080:8080
+            - 15432:15432
+        networks:
+            - overlay
+    nextjs-frontend:
+        image: wordstatistic_nextjs_frontend:1.0.0
+        container_name: nextjs-frontend
+        restart: unless-stopped
+        networks:
+            - overlay
+
     traefik:
         image: traefik:v3.0
         container_name: traefik
@@ -19,9 +36,9 @@ services:
             - --entryPoints.statistic.address=:80
             - --entryPoints.admin.address=:15432
         ports:
-            - 80:80
-            - 8080:8080
-            - 15432:15432
+            - 81:80
+            - 8081:8080
+            - 15433:15432
         networks:
             - overlay
         volumes:
@@ -35,7 +52,7 @@ services:
             - overlay
         labels:
             - traefik.enable=true
-            - traefik.http.routers.user.rule=Host(`user.localhost`)
+            - traefik.http.routers.user.rule=HostRegexp(`^user\.(localhost|traefik)$`)
             - traefik.http.routers.user.entrypoints=statistic
     user-postgres:
         image: postgres:15
@@ -69,7 +86,7 @@ services:
             - overlay
         labels:
             - traefik.enable=true
-            - traefik.http.routers.globalstatistic.rule=Host(`globalstatistic.localhost`)
+            - traefik.http.routers.globalstatistic.rule=HostRegexp(`^globalstatistic\.(localhost|traefik)$`)
             - traefik.http.routers.globalstatistic.entrypoints=statistic
     globalstatistic-postgres:
         image: postgres:15
@@ -100,7 +117,7 @@ services:
             - overlay
         labels:
             - traefik.enable=true
-            - traefik.http.routers.localstatistic.rule=Host(`localstatistic.localhost`)
+            - traefik.http.routers.localstatistic.rule=HostRegexp(`^localstatistic\.(localhost|traefik)$`)
             - traefik.http.routers.localstatistic.entrypoints=statistic
     localstatistic-postgres:
         image: postgres:15
@@ -142,7 +159,7 @@ services:
             - overlay
         labels:
             - traefik.enable=true
-            - traefik.http.routers.usingHistory_clickhouse.rule=Host(`usingHistoryClickhouse.localhost`)
+            - traefik.http.routers.usingHistory_clickhouse.rule=HostRegexp(`^usingHistoryClickhouse\.(localhost|traefik)$`)
             - traefik.http.routers.usingHistory_clickhouse.entrypoints=admin
             - traefik.http.routers.usingHistory_clickhouse.middlewares=admin-auth
         volumes:
@@ -159,7 +176,7 @@ services:
             - overlay
         labels:
             - traefik.enable=true
-            - traefik.http.routers.redis_comander.rule=Host(`rediscomander.localhost`)
+            - traefik.http.routers.redis_comander.rule=HostRegexp(`^rediscomander\.(localhost|traefik)$`)
             - traefik.http.routers.redis_comander.entrypoints=admin
             - traefik.http.routers.redis_comander.middlewares=admin-auth
 
@@ -203,7 +220,7 @@ services:
             - overlay
         labels:
             - traefik.enable=true
-            - traefik.http.routers.kafkaui.rule=Host(`kafkaui.localhost`)
+            - traefik.http.routers.kafkaui.rule=HostRegexp(`^kafkaui\.(localhost|traefik)$`)
             - traefik.http.routers.kafkaui.entrypoints=admin
             - traefik.http.routers.kafkaui.middlewares=admin-auth
         depends_on:
@@ -220,7 +237,7 @@ services:
             - overlay
         labels:
             - traefik.enable=true
-            - traefik.http.routers.pgadmin.rule=Host(`pgadmin.localhost`)
+            - traefik.http.routers.pgadmin.rule=HostRegexp(`^pgadmin\.(localhost|traefik)$`)
             - traefik.http.routers.pgadmin.entrypoints=admin
             - traefik.http.routers.pgadmin.middlewares=admin-auth
             #haart test

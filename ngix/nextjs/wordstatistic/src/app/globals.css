@@ -1,0 +1,51 @@
+* {
+  font-family: 'Times New Roman', Times, serif;
+}
+body {
+  margin: 0;
+  border: 0;
+  padding: 0;
+}
+header {
+  display: block;
+  margin: 0;
+  border: 0;
+  padding-top: 1.5vh;
+  padding-bottom: 1.5vh;
+  padding-right: 1.5vw;
+  padding-left: 1.5vw;
+  min-height: 7vmin;
+  width: 97vw;
+
+  background-color: antiquewhite;
+}
+main {
+  display: block;
+  margin: 0;
+  border: 0;
+  padding-top: 1vh;
+  padding-bottom: 1vh;
+  padding-right: 5vw;
+  padding-left: 5vw;
+  min-height: calc(100vh - 7vmin - 5vh);
+  width: 90vw;
+
+  background-color: aliceblue;
+}
+footer {
+  display: block;
+  margin: 0;
+  border: 0;
+  padding-top: 1.5vh;
+  padding-bottom: 1.5vh;
+  padding-right: 1.5vw;
+  padding-left: 1.5vh;
+  min-height: 5vmin;
+  width: 97vw;
+
+  background-color: burlywood;
+}
+
+.global_mainHeader {
+  color: darkblue;
+}

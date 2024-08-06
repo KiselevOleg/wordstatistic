@@ -28,6 +28,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
  * @author Kiselev Oleg
  */
 @RestController
+@CrossOrigin(maxAge = 60L, origins = {"http://localhost", "http://localhost:80", "http://localhost:3000"})
 @RequestMapping("globalStatistic")
 @Tag(
     name = "global statistic controller",
