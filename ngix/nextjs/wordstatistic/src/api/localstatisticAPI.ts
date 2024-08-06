@@ -41,7 +41,7 @@ export function getAllTexts(topicName:string):Promise<TextListEntity[]> {
         }
       ).then(res => res.json()).catch(e => e);
 }
-export function getText(topicName:string, textName:string):Promise<Text> {
+export function getText(topicName:string, textName:string):Promise<Text|false> {
     const {access: accessToken}=getTokens()??{access: ""};
     return fetch(
         `${process.env.NEXT_PUBLIC_API_LOCALSTATISTIC_HOST}/topicsAndTexts/`+
@@ -54,7 +54,10 @@ export function getText(topicName:string, textName:string):Promise<Text> {
           },
           body: null
         }
-      ).then(res => res.json()).catch(e => e);
+      ).then(res => {
+        if(res.status==200) return res.json();
+        return false;
+      }).catch(e => e);
 }
 
 export function addTopic(topicName:string):Promise<boolean> {

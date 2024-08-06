@@ -25,10 +25,6 @@ interface StatePageType {
   showAddForm: boolean;
 }
 class Page extends React.Component<PropsPageType , StatePageType> {
-  static async getInitialProps({ query }: { query: { topic: string } }) {
-    return { topic: query.topic };
-  }
-
   constructor(props: PropsPageType) {
     super(props);
     const {topic}=props;
@@ -270,7 +266,7 @@ class AddNewTextForm
       <h2 className="global_mainHeader">Add a new text to a topic {topic}</h2>
       <input onChange={this.textNameInputOnChangeHandle} 
         type="text" placeholder="a text name" value={textNameInput}/><br />
-        <textarea onChange={this.textContentTextAreaOnChangeHandle} value={textContentTextArea} /><br />
+      <textarea onChange={this.textContentTextAreaOnChangeHandle} value={textContentTextArea} /><br />
       {statusMessage!==null?<><span>{statusMessage}</span><br /></>:<></>}
       <button onClick={this.addNewTextButtonClickHandle}>add</button>
     </section>;
