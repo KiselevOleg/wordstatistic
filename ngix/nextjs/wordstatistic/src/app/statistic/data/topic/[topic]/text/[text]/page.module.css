@@ -1,0 +1,8 @@
+.inPreviousPageLink * {
+  margin-top: 30px;
+  margin-bottom: 0;
+  color: darkgoldenrod;
+}
+.inPreviousPageLink a { 
+  text-decoration: none; 
+}

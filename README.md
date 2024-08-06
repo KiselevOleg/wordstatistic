@@ -28,7 +28,12 @@ sudo docker build \
     -t wordstatistic_ngix:1.0.0 ./ngix
 sudo docker build \
     -t wordstatistic_nextjs_frontend:1.0.0 ./ngix/nextjs
-
+echo \
+"NEXT_PUBLIC_LOCAL_HOST=http://localhost:3000
+NEXT_PUBLIC_API_GLOBALSTATISTIC_HOST=http://globalstatistic.localhost:80
+NEXT_PUBLIC_API_LOCALSTATISTIC_HOST=http://localstatistic.localhost:80
+NEXT_PUBLIC_API_USER_HOST=http://user.localhost:80" \
+> ./ngix/nextjs/wordstatistic/.env.local
 
 
 

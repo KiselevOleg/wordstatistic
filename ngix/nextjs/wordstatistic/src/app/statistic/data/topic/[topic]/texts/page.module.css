@@ -1,0 +1,42 @@
+.ListUl {
+  list-style-type: none;
+  max-width: 100%;
+}
+.ListUl li {
+  border-style: solid;
+  border-left-width: 1.5px;
+  border-right-width: 0px;
+  border-top-width: 0px;
+  border-bottom-width: 0px;
+  border-color: brown;
+  border-radius: 5px;
+  padding-left: 10px;
+}
+.ListUl>li>a {
+  margin-left: 1%;
+  margin-right: 4%;
+  text-decoration: none;
+  word-break: break-all;
+  color:darkblue;
+}
+
+.manipulationButton {
+  margin-left: 0.25%;
+  margin-right: 0.25%;
+  border: 0;
+  background-color: rgba(211, 211, 211, 0.5);
+  color: rgba(169, 169, 169, 0.5);
+}
+.manipulationButton:hover {
+  background-color: lightgrey;
+  color: darkgray;
+}
+
+.inPreviousPageLink * {
+  margin-top: 30px;
+  margin-bottom: 0;
+  color: darkgoldenrod;
+}
+.inPreviousPageLink a { 
+  text-decoration: none; 
+}

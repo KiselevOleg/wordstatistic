@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import MainHeader from "./MainHeader";
+import RefreshTokens from "./RefreshTokens";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -31,6 +32,7 @@ export default function RootLayout({
           type="image/<generated>"
           sizes="<generated>"
         />
+        <RefreshTokens />
       </head>
       <body className={inter.className}>
         <header><MainHeader /></header>

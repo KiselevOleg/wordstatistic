@@ -8,11 +8,44 @@
   padding: 0;
   width:30vw;
 }
+.mainTitle a {
+  color: cadetblue;
+  text-decoration: none;
+}
 
-.emptySpace {
+.linkList {
   display: inline-block;
   width: 50vw;
   height: 5vmin;
+}
+.linkListOl {
+  width: 100%;
+  mask-type: unset;
+}
+.linkListLi {
+  display:inline-block;
+  margin: 0;
+  border: 0;
+  border-top: 0;
+  border-bottom: 0;
+  border-left: 3px;
+  border-right: 3px;
+  width: 15vw;
+}
+.linkListLi * {
+  color: darkmagenta;
+}
+.linkListLi a:link { 
+  text-decoration: none; 
+} 
+.linkListLi a:visited { 
+  text-decoration: none; 
+} 
+.linkListLi a:hover { 
+  text-decoration: none; 
+} 
+.linkListLi a:active { 
+  text-decoration: none; 
 }
 
 .authorization {
