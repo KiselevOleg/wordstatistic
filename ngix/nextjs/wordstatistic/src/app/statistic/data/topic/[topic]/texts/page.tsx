@@ -8,8 +8,12 @@ import { validTokens } from "@/api/userAPI";
 import {
   getAllTotics,
   TextListEntity, getAllTexts, 
-  addText, updateText, deleteText 
+  addText, updateText, deleteText, 
+  getMostPopularWordsForText, 
+  getMostPopularWordsForTopic 
 } from "@/api/localstatisticAPI";
+import ListOfMostPopularWords from "@/app/statistic/ListOfMostPopularWords";
+import { Word } from "@/api/globalstatisticAPI";
 
 export default function Page_({ params }: { params: { topic: string } }) {
   return <Page topic={params.topic} />
@@ -56,6 +60,7 @@ class Page extends React.Component<PropsPageType , StatePageType> {
     }
     return <>
       <TextList topic={topic} />
+      <br />
       <button onClick={this.showAddFormButtonOnClickHandle}>add new text</button>
       {showAddForm?<AddNewTextForm topic={topic}/>:<></>}
       <p 
@@ -74,6 +79,7 @@ interface StateTextListType {
   topic: string;
   texts:TextListEntity[];
   selectedToChangeTexts: Map<string,{newName:string, errorMessage:string}>;
+  selectedForStatistic: {textInsteadAll?: string, allTexts: true}|null;
 }
 class TextList extends React.Component<PropsTextListType,StateTextListType> {
   constructor(props: PropsTextListType) {
@@ -83,7 +89,8 @@ class TextList extends React.Component<PropsTextListType,StateTextListType> {
     this.state={
       topic: topic,
       texts:[],
-      selectedToChangeTexts:new Map<string,{newName:string, errorMessage:string}>()
+      selectedToChangeTexts:new Map<string,{newName:string, errorMessage:string}>(),
+      selectedForStatistic: null
     };
   }
 
@@ -164,8 +171,18 @@ class TextList extends React.Component<PropsTextListType,StateTextListType> {
     });
   }
 
+  showTextStatisticButtonClickHandle = (textName:string):void => {
+    this.setState({selectedForStatistic: {textInsteadAll: textName, allTexts: true}});
+  }
+  showStatisticButtonOnClickHandle = ():void => {
+    this.setState({selectedForStatistic: null});
+  }
+  statisticForAllTextsButtonOnClickHandle = () => {
+    this.setState({selectedForStatistic: {allTexts: true}});
+  }
+
   render():React.ReactNode {
-    const {topic, texts, selectedToChangeTexts}=this.state;
+    const {topic, texts, selectedToChangeTexts, selectedForStatistic}=this.state;
     const texts_:React.ReactNode[]=[];
     for(let i:number=0;i<texts.length;++i) {
       texts_[i]=<li key={texts[i].name}>
@@ -187,6 +204,8 @@ class TextList extends React.Component<PropsTextListType,StateTextListType> {
         }
         <button onClick={() => this.textDeleteButtonClickHandle(texts[i].name)} 
           className={Styles.manipulationButton} title="delete">X</button>
+        <button onClick={() => this.showTextStatisticButtonClickHandle(texts[i].name)} 
+          className={Styles.manipulationButton} title="show statistic">S</button>
         {
           selectedToChangeTexts.has(texts[i].name)?<>
             <span>{selectedToChangeTexts.get(texts[i].name)?.errorMessage}</span>
@@ -195,9 +214,46 @@ class TextList extends React.Component<PropsTextListType,StateTextListType> {
       </li>
     }
 
+    let statistic:React.ReactNode;
+    if (selectedForStatistic===null) {
+      statistic=<></>;
+    } else if (selectedForStatistic.textInsteadAll!==undefined) {
+      statistic=<>
+        <h2 className="global_mainHeader">
+          most popular words for topic {selectedForStatistic.textInsteadAll!}
+        </h2>
+        <ListOfMostPopularWords key={selectedForStatistic.textInsteadAll!} getStatisticFunction={
+          (limit:number):Promise<Word[]> => {
+            return getMostPopularWordsForText(topic, selectedForStatistic.textInsteadAll!, limit);
+          } 
+        } />
+        <br />
+        <button onClick={this.showStatisticButtonOnClickHandle}>hide</button>
+        <br />
+      </>;
+    } else {
+      statistic=<>
+      <h2 className="global_mainHeader">
+        most popular words for user
+      </h2>
+        <ListOfMostPopularWords key="!all" getStatisticFunction={
+          (limit:number):Promise<Word[]> => {
+            return getMostPopularWordsForTopic(topic, limit);
+          } 
+        } />
+        <br />
+        <button onClick={this.showStatisticButtonOnClickHandle}>hide</button>
+        <br />
+      </>;
+    }
+
     return <section>
       <h2 className="global_mainHeader">All texts for topic {topic}</h2>
       <ul className={Styles.ListUl}>{texts_}</ul>
+      {statistic}
+      <button onClick={this.statisticForAllTextsButtonOnClickHandle}>
+        statistic for all
+      </button>
     </section>;
   }
 }

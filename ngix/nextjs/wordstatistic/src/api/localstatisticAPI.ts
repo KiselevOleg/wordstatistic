@@ -170,7 +170,7 @@ export function getMostPopularWordsForUser(limit:number):Promise<Word[]> {
           },
           body: null
         }
-      ).then(res => res.status==200).catch(e => e);
+      ).then(res => res.json()).catch(e => e);
 }
 export function getMostPopularWordsForTopic(topicName:string, limit:number):Promise<Word[]> {
     const {access: accessToken}=getTokens()??{access: ""};
@@ -185,7 +185,7 @@ export function getMostPopularWordsForTopic(topicName:string, limit:number):Prom
           },
           body: null
         }
-      ).then(res => res.status==200).catch(e => e);
+      ).then(res => res.json()).catch(e => e);
 }
 export function getMostPopularWordsForText(
     topicName:string, 
@@ -204,5 +204,5 @@ export function getMostPopularWordsForText(
           },
           body: null
         }
-      ).then(res => res.status==200).catch(e => e);
+      ).then(res => res.json()).catch(e => e);
 }

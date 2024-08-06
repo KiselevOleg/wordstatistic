@@ -5,9 +5,16 @@ import Link from "next/link";
 import Styles from "./page.module.css";
 
 import { validTokens } from "@/api/userAPI";
-import { getText, updateText } from "@/api/localstatisticAPI";
+import {
+  getText, 
+  updateText, 
+  getMostPopularWordsForText 
+} from "@/api/localstatisticAPI";
+import ListOfMostPopularWords from "@/app/statistic/ListOfMostPopularWords";
 
-export default function Page_({ params }: { params: { topic: string, text: string } }) {
+export default function Page_(
+  { params }: { params: { topic: string, text: string } }
+) {
   return <Page topic={params.topic} text={params.text} />
 }
 
@@ -54,6 +61,7 @@ class Page extends React.Component<PropsPageType , StatePageType> {
     }
     return <>
       <TextForm topic={topic} textName={text} textContent={textContent}/>
+      <ShowStatistic topic={topic} text={text} />
     </>;
   }
 }
@@ -85,7 +93,9 @@ class TextForm
     };
   }
   componentDidUpdate(prevProps: Readonly<PropsTextFormType>): void {
-    if(prevProps.textContent!==this.props.textContent) this.setState({textContentTextArea: this.props.textContent});
+    if(prevProps.textContent!==this.props.textContent) {
+      this.setState({textContentTextArea: this.props.textContent});
+    }
   }
 
   textNameInputOnChangeHandle = 
@@ -114,7 +124,9 @@ class TextForm
 
     updateText(topic, text, textNameInput, textContentTextArea).then(res => {
       if(res===false) {
-        this.setState({statusMessage: "a text name is incorrect or is already used"});
+        this.setState({
+          statusMessage: "a text name is incorrect or is already used"
+        });
         return;
       }
 
@@ -129,7 +141,9 @@ class TextForm
       <h2 className="global_mainHeader">Add a new text to a topic {topic}</h2>
       <input onChange={this.textNameInputOnChangeHandle} 
         type="text" placeholder="a text name" value={textNameInput}/><br />
-      <textarea onChange={this.textContentTextAreaOnChangeHandle} value={textContentTextArea} /><br />
+      <textarea 
+        onChange={this.textContentTextAreaOnChangeHandle} 
+        value={textContentTextArea} /><br />
       {statusMessage!==null?<><span>{statusMessage}</span><br /></>:<></>}
       <button onClick={this.changeTextButtonClickHandle}>update text</button>
 
@@ -139,5 +153,50 @@ class TextForm
         <Link href={`/statistic/data/topic/${topic}/texts`}>on texts list page</Link>
       </p>
     </section>;
+  }
+}
+
+interface PropsShowStatisticType {
+  topic: string;
+  text: string;
+}
+interface StateShowStatisticType {
+  topic: string;
+  text: string;
+  showStatistic: boolean;
+}
+class ShowStatistic 
+  extends React.Component<PropsShowStatisticType,StateShowStatisticType> {
+  constructor(props: PropsShowStatisticType) {
+    super(props);
+    const {topic, text}=props;
+
+    this.state = {
+      topic: topic,
+      text: text,
+      showStatistic: false
+    };
+  }
+
+  showStatisticButtonOnClickHandle= () => {
+    const {showStatistic}=this.state;
+
+    this.setState({showStatistic: !showStatistic});
+  }
+
+  render():React.ReactNode {
+    const {topic, text, showStatistic}=this.state;
+    return <>
+      <button onClick={this.showStatisticButtonOnClickHandle}>show statistic</button>
+      {showStatistic?<>
+        <br />
+        <ListOfMostPopularWords 
+          preload={true}
+          getStatisticFunction={(limit:number)=>{
+            return getMostPopularWordsForText(topic,text,limit);
+          }}
+        />
+      </>:<></>}
+    </>;
   }
 }
