@@ -1,43 +1,46 @@
 # setup
 
-./gradlew clean build test check
+testing and build backend with creating executable files (first line is not required).
 
-./gradlew bootJar
+    ./gradlew clean build test check
 
+    ./gradlew bootJar
 
+creating docker images for run the backend programs.
 
-sudo docker build \
-    --build-arg JAR_FILE="./build/libs/globalstatistic-1.0.0.jar" \
-    -t wordstatistic_globalstatistic:1.0.0 ./globalstatistic
+    sudo docker build \
+        --build-arg JAR_FILE="./build/libs/globalstatistic-1.0.0.jar" \
+        -t wordstatistic_globalstatistic:1.0.0 ./globalstatistic
 
-sudo docker build \
-    --build-arg JAR_FILE="./build/libs/localstatistic-1.0.0.jar" \
-    -t wordstatistic_localstatistic:1.0.0 ./localstatistic
+    sudo docker build \
+        --build-arg JAR_FILE="./build/libs/localstatistic-1.0.0.jar" \
+        -t wordstatistic_localstatistic:1.0.0 ./localstatistic
 
-sudo docker build \
-    --build-arg JAR_FILE="./build/libs/user-1.0.0.jar" \
-    -t wordstatistic_user:1.0.0 ./user
+    sudo docker build \
+        --build-arg JAR_FILE="./build/libs/user-1.0.0.jar" \
+        -t wordstatistic_user:1.0.0 ./user
 
-sudo docker build \
-    --build-arg JAR_FILE="./build/libs/usingHistory-1.0.0.jar" \
-    -t wordstatistic_usinghistory:1.0.0 ./usingHistory
+    sudo docker build \
+        --build-arg JAR_FILE="./build/libs/usingHistory-1.0.0.jar" \
+        -t wordstatistic_usinghistory:1.0.0 ./usingHistory
 
+creating a environment variables for nestjs application
+and create docker images for a frontend service and ngix proxy.
 
+    echo \
+    "NEXT_PUBLIC_LOCAL_HOST=http://localhost:3000
+    NEXT_PUBLIC_API_GLOBALSTATISTIC_HOST=http://globalstatistic.localhost:80
+    NEXT_PUBLIC_API_LOCALSTATISTIC_HOST=http://localstatistic.localhost:80
+    NEXT_PUBLIC_API_USER_HOST=http://user.localhost:80" \
+    > ./ngix/nextjs/wordstatistic/.env.local
+    sudo docker build \
+        -t wordstatistic_ngix:1.0.0 ./ngix
+    sudo docker build \
+        -t wordstatistic_nextjs_frontend:1.0.0 ./ngix/nextjs
 
-sudo docker build \
-    -t wordstatistic_ngix:1.0.0 ./ngix
-sudo docker build \
-    -t wordstatistic_nextjs_frontend:1.0.0 ./ngix/nextjs
-echo \
-"NEXT_PUBLIC_LOCAL_HOST=http://localhost:3000
-NEXT_PUBLIC_API_GLOBALSTATISTIC_HOST=http://globalstatistic.localhost:80
-NEXT_PUBLIC_API_LOCALSTATISTIC_HOST=http://localstatistic.localhost:80
-NEXT_PUBLIC_API_USER_HOST=http://user.localhost:80" \
-> ./ngix/nextjs/wordstatistic/.env.local
+downloads all other dependencies and run a docker compose cluster.
 
-
-
-sudo docker compose up -d
+    sudo docker compose up -d
 
 # description
 
@@ -48,7 +51,7 @@ A website for analysis count of words in texts. It supports only the Latin alpha
 A service nextjs-frontend contains a nextjs frontend project with all frontend.
 
 All connections are listened in a ngix server
-that separates requests into a frontend part and
+that separates requests into a frontend part (the service nextjs-frontend) and
 into a backend cluster (with a gategay based on traefik).
 
 All setting of host names can be found in /ngix/ngix.conf
@@ -66,6 +69,22 @@ example
     }
 
 ## backend
+
+all connections in backend here written with a ngix proxy.
+To connect directly in backend (traefik service) use the same ports+1.
+It can be changed or removed in docker-compose.yml.
+
+emapmle
+
+    traefik:
+        image: traefik:v3.0
+        container_name: traefik
+        restart: unless-stopped
+        ...
+        ports:
+            - 81:80
+            - 8081:8080
+            - 15433:15432
 
 ### globalstatistic
 
@@ -154,6 +173,9 @@ leads to creating a table
 
 # swagger
 
+It can be used for check all res api and automatically generate curl requests
+(use direct connect at a port 81 to have ability to execute requests).
+
 http://globalstatistic.localhost:80/swagger-ui.html
 
 http://localstatistic.localhost:80/swagger-ui.html
@@ -161,6 +183,10 @@ http://localstatistic.localhost:80/swagger-ui.html
 http://user.localhost:80/swagger-ui.html
 
 # postgres manager
+
+a pdadmin service for contact with
+all postgresql databases in a backend cluster
+(use parameters for databases from a docker compose cluster).
 
 http://pdadmin.localhost:15432/
 
@@ -189,6 +215,10 @@ postgres-passwords
 
 # kafka manager
 
+It can be used to use and manually change
+all kafka messages in a backend cluster
+(use parameters for connecting from a docker compose cluster).
+
 http://kafkaui.localhost:15432/
 
 docker-compose.yml contains all names and password
@@ -203,6 +233,9 @@ traefik http authorization
 
 # redis manager
 
+It can be used to use and manually change
+all redis data.
+
 http://rediscomander.localhost:15432/
 
 docker-compose.yml contains all names and password
@@ -216,6 +249,10 @@ traefik http authorization
     - 'traefik.http.middlewares.admin-auth.basicauth.users=haart:$$2a$$12$$SUDmkLybXr3LQVCoHfmo4.bao6PIZe1R8vESkiCBAqbbNZ2jAdQkm'
 
 # clickhouse manager
+
+It can be used to connect and manipulate
+all statistic information in a statistic service clickhouse database
+by sql requests.
 
 http://usinghistoryclickhouse.localhost:15432/play
 
@@ -254,7 +291,31 @@ clickhouse password
 
 ### nextjs-frontend
 
+main page with global statistic
+
     http://localhost:80/
+
+for sign in
+
+    http://localhost/auth/signIn
+
+sign up, sign up
+
+    http://localhost/auth/signIn
+    http://localhost/auth/signIn
+
+for changing a current username, password, deleting a current user
+
+    http://localhost/auth/changeUsername
+    http://localhost/auth/changePassword
+    http://localhost/auth/deleteUser
+
+for manipulating own topics, texts and showing statistic
+
+    http://localhost/statistic/data/topics
+    http://localhost/statistic/data/topic/[topic]/texts
+    http://localhost/statistic/data/topic/[topic]/text/[text]
+    http://localhost/statistic/userStatistic
 
 ## backend
 
@@ -321,7 +382,7 @@ clickhouse password
 
     curl -i -H "Content-Type: application/json" -H "Authorization: Bearer {token}" \
         -X PUT \
-        -d '{"topic1": "topic1", "newName": "text1", "oldName": "text1test"}' \
+        -d '{"topic": "topic1", "newName": "text1", "oldName": "text1test"}' \
         "localstatistic.localhost:80/topicsAndTexts/updateText" \
         && printf '\n'
 
@@ -329,7 +390,7 @@ clickhouse password
 
     curl -i -H "Content-Type: application/json" -H "Authorization: Bearer {token}" \
         -X PUT \
-        -d '{"topic1": "topic1", "newName": "text1", "oldName": "text1test", "text":"a new test 2"}' \
+        -d '{"topic": "topic1", "newName": "text1", "oldName": "text1test", "text":"a new test 2"}' \
         "localstatistic.localhost:80/topicsAndTexts/updateText" \
         && printf '\n'
 
