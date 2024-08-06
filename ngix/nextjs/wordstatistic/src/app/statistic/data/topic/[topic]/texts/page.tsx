@@ -58,6 +58,11 @@ class Page extends React.Component<PropsPageType , StatePageType> {
       <TextList topic={topic} />
       <button onClick={this.showAddFormButtonOnClickHandle}>add new text</button>
       {showAddForm?<AddNewTextForm topic={topic}/>:<></>}
+      <p 
+        className={Styles.inPreviousPageLink}
+      >
+        <Link href={`/statistic/data/topics`}>on topic list page</Link>
+      </p>
     </>;
   }
 }
