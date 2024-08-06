@@ -99,10 +99,10 @@ class LinkList extends React.Component<PropsLinkListType, StateLinkListType> {
         case "viewText":
           return <>
             <li key="viewText_topics" className={Styles.linkListLi}>
-            <div><Link href="/topics">own topics</Link></div>
+            <div><Link href="/statistic/data/topics">own topics</Link></div>
             </li>
             <li key="viewText_userStatistic" className={Styles.linkListLi}>
-            <div><Link href="/userStatistic">get statistic for all own texts</Link></div>
+            <div><Link href="/statistic/userStatistic">get statistic for all own texts</Link></div>
             </li>
           </>;
           break;
