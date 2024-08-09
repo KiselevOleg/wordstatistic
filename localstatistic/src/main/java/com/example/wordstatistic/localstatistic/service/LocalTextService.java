@@ -6,6 +6,7 @@ package com.example.wordstatistic.localstatistic.service;
 import com.example.wordstatistic.localstatistic.client.UsingHistoryService;
 import com.example.wordstatistic.localstatistic.model.Text;
 import com.example.wordstatistic.localstatistic.model.Topic;
+import com.example.wordstatistic.localstatistic.model.redis.GetMostPopularWordsListForTextCash;
 import com.example.wordstatistic.localstatistic.model.redis.GetMostPopularWordsListForTopicCash;
 import com.example.wordstatistic.localstatistic.model.redis.GetMostPopularWordsListForUserCash;
 import com.example.wordstatistic.localstatistic.repository.TextRepository;
@@ -473,6 +474,26 @@ public class LocalTextService {
                 )
             );
             throw NEW_TEXT_FOUND_ERROR;
+        }
+
+        Long cashId;
+        cashId = getMostPopularWordsListForUserCashRepository.findByUserId(
+            userId
+        ).map(GetMostPopularWordsListForUserCash::getId).orElse(null);
+        if (cashId != null) {
+            getMostPopularWordsListForUserCashRepository.deleteById(cashId);
+        }
+        cashId = getMostPopularWordsListForTopicCashRepository.findByUserIdAndTopicId(
+            userId, topic.getId()
+        ).map(GetMostPopularWordsListForTopicCash::getId).orElse(null);
+        if (cashId != null) {
+            getMostPopularWordsListForTopicCashRepository.deleteById(cashId);
+        }
+        cashId = getMostPopularWordsListForTextCashRepository.findByUserIdAndTopicIdAndTextId(
+            userId, topic.getId(), text.getId()
+        ).map(GetMostPopularWordsListForTextCash::getId).orElse(null);
+        if (cashId != null) {
+            getMostPopularWordsListForTextCashRepository.deleteById(cashId);
         }
 
         final Integer oldTextLength = text.getText().length();

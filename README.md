@@ -480,8 +480,10 @@ for manipulating own topics, texts and showing statistic
 
 # delete
 
-sudo docker compose down
+delete a cluster, volumes, databases data.
 
-sudo docker volume prune
+    sudo docker compose down
 
-sudo rm -fr ./databases_data
+    sudo docker volume prune
+
+    sudo rm -fr ./databases_data
