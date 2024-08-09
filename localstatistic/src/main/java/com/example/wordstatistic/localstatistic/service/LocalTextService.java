@@ -294,7 +294,7 @@ public class LocalTextService {
         }
 
         textRepository.save(new Text(null, topic, textName, text));
-        kafkaTemplate.send("text", text);
+        kafkaSendText(text);
 
         usingHistory.sendMessage(
             "addText",
@@ -500,7 +500,7 @@ public class LocalTextService {
         text.setName(textNewName);
         textNewContent.map(e -> {
             text.setText(e);
-            kafkaTemplate.send("text", e);
+            kafkaSendText(e);
             return e;
         });
         textRepository.save(text);
@@ -650,6 +650,16 @@ public class LocalTextService {
         ).map(GetMostPopularWordsListForTopicCash::getId).orElse(null);
         if (cashId != null) {
             getMostPopularWordsListForTopicCashRepository.deleteById(cashId);
+        }
+    }
+
+    private void kafkaSendText(final String text) {
+        if (text.length() < 1000000) {
+            kafkaTemplate.send("text", text);
+        } else {
+            for (int i = 0; i < text.length(); i += 1000000) {
+                kafkaTemplate.send("text", text.substring(i, Math.min(text.length(), i + 1000000)));
+            }
         }
     }
 }
