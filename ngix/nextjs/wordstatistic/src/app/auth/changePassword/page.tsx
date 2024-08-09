@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 import React from "react";
 import Link from "next/link";
@@ -40,6 +40,7 @@ class Form extends React.Component<unknown, StateFormType> {
   }
 
   newPasswordInputRef:React.RefObject<HTMLInputElement> = React.createRef<HTMLInputElement>();
+  newPasswordCheckInputRef:React.RefObject<HTMLInputElement> = React.createRef<HTMLInputElement>();
   currentPasswordInputRef:React.RefObject<HTMLInputElement> = React.createRef<HTMLInputElement>();
 
   actionButtonClickHandle = ():void => {
@@ -48,6 +49,10 @@ class Form extends React.Component<unknown, StateFormType> {
         errorMessage: 
           "a new password is invalid (length is from 4 to 50 is required)"
       });
+      return;
+    }
+    if (this.newPasswordInputRef.current.value!=this.newPasswordCheckInputRef.current?.value) {
+      this.setState({errorMessage: "a new password and a new check paddword are not equal"});
       return;
     }
     if (!this.currentPasswordInputRef.current?.checkValidity()) {
@@ -62,7 +67,7 @@ class Form extends React.Component<unknown, StateFormType> {
       if(res===true) {
           window.location.replace("/auth/signIn");
       } else {
-        this.setState({errorMessage: "unexpected error"});
+        this.setState({errorMessage: "a current password is incorrect"});
       }
     });
   }
@@ -78,6 +83,10 @@ class Form extends React.Component<unknown, StateFormType> {
       </label><br />
       <label>
         <input ref={this.newPasswordInputRef} type="password" placeholder="a new password" 
+          required minLength={4} maxLength={50} />
+      </label><br />
+      <label>
+        <input ref={this.newPasswordCheckInputRef} type="password" placeholder="a new check password" 
           required minLength={4} maxLength={50} />
       </label>
       <p className={Styles.errorMessage}>{errorMessage}</p>

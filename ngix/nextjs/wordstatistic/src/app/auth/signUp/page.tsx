@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 import React from "react";
 import Link from "next/link";
@@ -37,6 +37,7 @@ class SignUpForm extends React.Component<unknown, StateSignUpFormType> {
 
   usernameInputRef:React.RefObject<HTMLInputElement> = React.createRef<HTMLInputElement>();
   passwordInputRef:React.RefObject<HTMLInputElement> = React.createRef<HTMLInputElement>();
+  passwordCheckInputRef:React.RefObject<HTMLInputElement> = React.createRef<HTMLInputElement>();
 
   signUpButtonClickHandle = ():void => {
     if (!this.usernameInputRef.current?.checkValidity()) {
@@ -48,6 +49,10 @@ class SignUpForm extends React.Component<unknown, StateSignUpFormType> {
     }
     if (!this.passwordInputRef.current?.checkValidity()) {
       this.setState({errorMessage: "password is invalid (length is from 4 to 50 is required)"});
+      return;
+    }
+    if (this.passwordInputRef.current.value!=this.passwordCheckInputRef.current?.value) {
+      this.setState({errorMessage: "a password and a check password are not equal"});
       return;
     }
 
@@ -79,6 +84,10 @@ class SignUpForm extends React.Component<unknown, StateSignUpFormType> {
       </label><br />
       <label>
         <input ref={this.passwordInputRef} type="password" placeholder="password" 
+          required minLength={4} maxLength={50} /><br />
+      </label>
+      <label>
+        <input ref={this.passwordCheckInputRef} type="password" placeholder="check password" 
           required minLength={4} maxLength={50} /><br />
       </label>
       <p className={Styles.errorMessage}>{errorMessage}</p>
